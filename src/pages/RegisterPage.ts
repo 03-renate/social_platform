@@ -13,6 +13,7 @@
 
 import { registerUser } from "../services/api/client";
 import { renderRoute } from "../router";
+import type { RegisterData, ApiResponse, RegisterResponse } from "../types/index.js";
 
 export default async function RegisterPage() {
   // Set up event listeners after DOM is updated
@@ -82,19 +83,17 @@ export default async function RegisterPage() {
         }
 
         try {
-          console.log("Attempting registration with:", { name, email });
           
           // Prepare registration data
-          const registrationData = {
+          const registrationData: RegisterData = {
             name,
             email,
             password,
             ...(bio && { bio }) // Only include bio if it's provided
           };
 
-          const result = await registerUser(registrationData);
-          console.log("Registration API result:", result);
-          
+          const result: ApiResponse<RegisterResponse> = await registerUser(registrationData);
+    
           if (result.errors && result.errors.length > 0) {
             // Handle API errors with specific messages
             const errorMessage = result.errors[0]?.message || "Registration failed.";

@@ -9,6 +9,13 @@
 import { API_URL } from "../../constant";
 import { getLocalItem } from "../../utils/storage";
 import { ApiError } from "../error/error";
+import type { 
+  LoginCredentials, 
+  RegisterData, 
+  ApiResponse, 
+  LoginResponse, 
+  RegisterResponse 
+} from "../../types/index";
 
 interface ApiClientOptions extends RequestInit {
   body?: BodyInit | null | undefined | string;
@@ -152,11 +159,7 @@ export const del = (endpoint: Endpoint) =>
  * @param data Object containing name, email, and password
  * @returns API response JSON
  */
-export async function registerUser(data: {
-  name: string;
-  email: string;
-  password: string;
-}) {
+export async function registerUser(data: RegisterData): Promise<ApiResponse<RegisterResponse>> {
   const response = await fetch("https://v2.api.noroff.dev/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -170,7 +173,7 @@ export async function registerUser(data: {
  * @param data Object containing email and password
  * @returns API response JSON
  */
-export async function loginUser(data: { email: string; password: string }) {
+export async function loginUser(data: LoginCredentials): Promise<ApiResponse<LoginResponse>> {
   const response = await fetch("https://v2.api.noroff.dev/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

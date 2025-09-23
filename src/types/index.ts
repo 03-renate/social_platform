@@ -6,7 +6,69 @@
  * @author Your Name
  */
 
-import type { Post } from './dummyjson-types';
+import type { Post } from './noroff-types';
+
+// Authentication related interfaces
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  bio?: string;
+}
+
+export interface ApiError {
+  message: string;
+  code?: string;
+  statusCode?: number;
+}
+
+export interface ApiResponse<T = any> {
+  data?: T;
+  errors?: ApiError[];
+  meta?: {
+    isFirstPage: boolean;
+    isLastPage: boolean;
+    currentPage: number;
+    previousPage: number | null;
+    nextPage: number | null;
+    pageCount: number;
+    totalCount: number;
+  };
+}
+
+export interface LoginResponse {
+  name: string;
+  email: string;
+  bio: string | null;
+  avatar: {
+    url: string;
+    alt: string;
+  } | null;
+  banner: {
+    url: string;
+    alt: string;
+  } | null;
+  accessToken: string;
+}
+
+export interface RegisterResponse {
+  name: string;
+  email: string;
+  bio: string | null;
+  avatar: {
+    url: string;
+    alt: string;
+  } | null;
+  banner: {
+    url: string;
+    alt: string;
+  } | null;
+}
 
 export interface User {
   id: number;
@@ -39,6 +101,19 @@ export interface Meta {
   createdAt: Date;
   qrCode: string;
   updatedAt: Date;
+}
+
+// Form validation interfaces
+export interface FormElements {
+  email: HTMLInputElement;
+  password: HTMLInputElement;
+  name?: HTMLInputElement;
+  bio?: HTMLTextAreaElement;
+}
+
+export interface FormValidationResult {
+  isValid: boolean;
+  errors: string[];
 }
 
 // Create a clean object to send to our service

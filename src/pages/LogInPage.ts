@@ -5,8 +5,9 @@
  */
 
 import { renderRoute } from "../router";
-import { loginUser, fetchApiKey } from "../services/api/client";
-import { setLocalItem } from "../utils/storage";
+import { loginUser, fetchApiKey } from "../services/api/client.js";
+import { setLocalItem } from "../utils/storage.js";
+import type { LoginCredentials, ApiResponse, LoginResponse } from "../types/index.js";
 
 export default async function LoginPage() {
   // Set up event listeners after DOM is updated
@@ -76,10 +77,12 @@ export default async function LoginPage() {
           submitBtn.textContent = "🔄 Signing In...";
         }
 
+        const loginData: LoginCredentials = { email, password };
+
         try {
-          console.log("Attempting login with:", { email });
-          const result = await loginUser({ email, password });
-          console.log("Login API result:", result);
+        
+          const result: ApiResponse<LoginResponse> = await loginUser(loginData);
+          
           
           if (result.errors && result.errors.length > 0) {
             // Handle API errors with specific messages
@@ -118,7 +121,7 @@ export default async function LoginPage() {
               const apikey = await fetchApiKey(accessToken);
               if (apikey) {
                 setLocalItem("apiKey", apikey);
-                console.log("API key obtained successfully");
+        
               }
             } catch (apiError) {
               console.warn("Failed to get API key:", apiError);

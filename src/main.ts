@@ -1,11 +1,9 @@
 import "./styles/profilePage.css";
 import { renderProfilePage } from "./pages/ProfilePage";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const appRoot = document.getElementById("profile-page");
-    if (appRoot) {
-        renderProfilePage(appRoot);
-    } else {
-        console.error("App root element not found");
-    }
-});
+
+// Example: render it inside a div with id="root"
+const root = document.getElementById('root');
+if (root) {
+  renderProfilePage(root, 'lyra_novak'); // pass the username to fetch
+}

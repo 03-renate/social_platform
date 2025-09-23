@@ -1,0 +1,47 @@
+/* Post card */
+.post-card {
+  background-color: var(--color-bg-alt);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.post-card h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.2rem;
+  color: var(--color-accent-light);
+}
+
+.post-card p {
+  margin: var(--spacing-xs) 0;
+  color: var(--color-text);
+}
+
+.post-card .tags {
+  margin-top: var(--spacing-xs);
+  color: var(--color-accent-light);
+  font-size: 0.85rem;
+}
+
+.post-card small {
+  display: block;
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-muted);
+}
+
+/* Post image inside card */
+.post-card img.post-media {
+  width: 100%;
+  max-height: 350px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-sm);
+}

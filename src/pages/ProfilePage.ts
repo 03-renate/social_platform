@@ -3,6 +3,7 @@
  * @description SPA Profile Page component template and logic.
  */
 
+// ---------------- TYPES ----------------
 interface UserProfile {
   name: string;
   username: string;
@@ -15,6 +16,19 @@ interface UserProfile {
   following: number;
   followers: number;
   posts: number;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  body?: string;
+  tags?: string[];
+  media?: {
+    url: string;
+    alt: string;
+  };
+  created: string;
+  updated: string;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -34,11 +48,12 @@ const DEFAULT_PROFILE: UserProfile = {
 const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibHlyYV9ub3ZhayIsImVtYWlsIjoibHlyYS5ub3Zha0BzdHVkLm5vcm9mZi5ubyIsImlhdCI6MTc1ODY1MzU0OH0.TO-KD1khvNRZTNjuzuWxh-ZwfREYv1xAglzwFoymjwg';
 const API_KEY = 'f7c3eed8-9891-4270-9f46-0ddcb5e3a2b9';
 
-// ---------------- RENDER PROFILE PAGE ----------------
+// ---------------- MAIN RENDER FUNCTION ----------------
 export async function renderProfilePage(root: HTMLElement, username?: string) {
   // Render default profile first
   root.innerHTML = generateProfileHTML(DEFAULT_PROFILE);
-  setupTabs(root);
+  setupTabs(root, username);
+
 
   if (!username) return;
 
@@ -73,6 +88,24 @@ export async function renderProfilePage(root: HTMLElement, username?: string) {
 
   } catch (err) {
     console.error("Failed to fetch profile:", err);
+  }
+}
+
+// ---------------- FETCH POSTS ----------------
+async function fetchPosts(username: string): Promise<Post[]> {
+  try {
+    const res = await fetch(`https://v2.api.noroff.dev/social/profiles/${username}/posts`, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "X-Noroff-API-Key": API_KEY
+      }
+    });
+    if (!res.ok) throw new Error("Failed to fetch posts");
+    const result = await res.json();
+    return result.data as Post[];
+  } catch (err) {
+    console.error(err);
+    return [];
   }
 }
 
@@ -126,10 +159,10 @@ function generateProfileHTML(profile: UserProfile) {
 
           <div class="profile-tabs-wrapper">
             <nav class="profile-tabs">
-              <button class="tab active">Posts</button>
-              <button class="tab">Replies</button>
-              <button class="tab">Media</button>
-              <button class="tab">Likes</button>
+              <button class="tab active"><i class="fa-regular fa-paper-plane"></i> Posts</button>
+              <button class="tab"><i class="fa-solid fa-reply"></i> Replies</button>
+              <button class="tab"><i class="fa-regular fa-image"></i> Media</button>
+              <button class="tab"><i class="fa-solid fa-heart"></i> Likes</button>
             </nav>
           </div>
         </div>
@@ -142,6 +175,37 @@ function generateProfileHTML(profile: UserProfile) {
   `;
 }
 
+function renderPosts(posts: Post[], filterMedia = false): string {
+  const filtered = filterMedia ? posts.filter(p => p.media) : posts;
+  if (!filtered.length) return "<p>No posts to show.</p>";
+
+  return filtered.map(p => `
+    <div class="post-card">
+      <h3>${p.title}</h3>
+      ${p.media ? `<img src="${p.media.url}" alt="${p.media.alt}" class="post-media"/>` : ""}
+      ${p.body ? `<p>${p.body}</p>` : ""}
+      ${p.tags?.length ? `<p class="tags">${p.tags.map(t => `#${t}`).join(" ")}</p>` : ""}
+      <small>Created: ${new Date(p.created).toLocaleString()}</small>
+    </div>
+  `).join("");
+}
+
+function renderMediaGallery(posts: Post[]): string {
+  const mediaPosts = posts.filter(p => p.media);
+  if (!mediaPosts.length) return "<p>No media to show.</p>";
+
+  return `
+    <div class="media-gallery">
+      ${mediaPosts.map(p => `
+        <div class="media-item">
+          <img src="${p.media!.url}" alt="${p.media!.alt}" />
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+
 // ---------------- UTILS ----------------
 function formatUsername(str: string) {
   return str.replace(/_/g, ' ')
@@ -151,23 +215,39 @@ function formatUsername(str: string) {
 }
 
 // ---------------- TABS LOGIC ----------------
-function setupTabs(root: HTMLElement) {
+function setupTabs(root: HTMLElement, username?: string) {
   const navTabs = root.querySelectorAll('.tab');
-  if (!navTabs.length) return;
+  if (!navTabs.length || !username) return;
 
-  navTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => {
-      navTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+  const contentArea = root.querySelector('#contentArea') as HTMLElement;
+  if (!contentArea) return;
 
-      const contentArea = root.querySelector('#contentArea');
-      const tabNames = ['Posts', 'Replies', 'Media', 'Likes'];
-      if (contentArea) {
-        contentArea.innerHTML = `<p>${tabNames[index]} will appear here...</p>`;
-      }
-    });
-  });
+  async function renderTab(index: number) {
+  navTabs.forEach(t => t.classList.remove('active'));
+  navTabs[index].classList.add('active');
+
+  if (index === 0) { // Posts
+    const posts = await fetchPosts(username);
+    contentArea.innerHTML = renderPosts(posts); // All posts
+  } else if (index === 2) { // Media
+    const posts = await fetchPosts(username);
+    contentArea.innerHTML = renderMediaGallery(posts); // Only images
+  } else {
+    const tabNames = ['Posts', 'Replies', 'Media', 'Likes'];
+    contentArea.innerHTML = `<p>${tabNames[index]} will appear here...</p>`;
+  }
 }
+
+  // Add click listeners
+  navTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => renderTab(index));
+  });
+
+  // Render default tab (Posts) immediately
+  renderTab(0);
+}
+
+
 
 // ---------------- UPDATE DOM ----------------
 function updateProfile(root: HTMLElement, profile: UserProfile) {

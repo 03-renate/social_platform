@@ -1,4 +1,6 @@
 import "./styles/profilePage.css";
+import "./styles/postsCard.css";
+import "./styles/gallery.css";
 import { renderProfilePage } from "./pages/ProfilePage";
 
 

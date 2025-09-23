@@ -12,14 +12,14 @@ export function renderProfilePage(root: HTMLElement) {
         <div class="profile-info">
           <div class="profile-avatar-wrapper">
             <div class="profile-avatar">
-              <img src="https://ui-avatars.com/api/?name=John+Doe&background=8b5fbf&color=fff&size=128" 
+              <img src="https://ui-avatars.com/api/?name=John+Doe&background=3b82f6&color=fff&size=128" 
                    alt="Profile" class="profile-avatar-img" />
             </div>
           </div>
 
           <div class="profile-header">
             <h1 class="profile-name">JOHN DOE</h1>
-            <button id="followBtn" class="follow-btn">Follow</button>
+            <button class="back-btn" id="back-btn">go back <i class="fa-solid fa-arrow-right"></i></button>
           </div>
 
           <p class="profile-username">@johndoe</p>
@@ -69,24 +69,6 @@ export function renderProfilePage(root: HTMLElement) {
       </div>
     </div>
   `;
-
-  // Follow button toggle
-  const followBtn = root.querySelector('#followBtn') as HTMLButtonElement;
-  let isFollowing = false;
-  if (followBtn) {
-    followBtn.addEventListener('click', () => {
-      isFollowing = !isFollowing;
-      if (isFollowing) {
-        followBtn.textContent = 'Following';
-        followBtn.classList.remove('follow-btn');
-        followBtn.classList.add('unfollow-btn');
-      } else {
-        followBtn.textContent = 'Follow';
-        followBtn.classList.remove('unfollow-btn');
-        followBtn.classList.add('follow-btn');
-      }
-    });
-  }
 
   // Tabs switching
   const navTabs = root.querySelectorAll('.tab');

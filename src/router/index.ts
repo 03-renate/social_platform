@@ -10,7 +10,9 @@ import FeedPage from '../pages/FeedPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import { lazyLoadImgs } from '../utils/lazy-load-img';
-import { APP_CONTAINER_CLASSNAME } from '../constants';
+import { APP_CONTAINER_CLASSNAME } from '../constant';
+import LoginPage from "../pages/LogInPage";
+import RegisterPage from "../pages/RegisterPage";
 
 const PATHS = {
   home: {
@@ -20,6 +22,14 @@ const PATHS = {
   about: {
     url: '/profile',
     component: ProfilePage,
+  },
+   login: {
+    url: "/login",
+    component: LoginPage,
+  },
+  register: {
+    url: "/register",
+    component: RegisterPage,
   },
 } as const;
 
@@ -62,12 +72,15 @@ export default async function router(
  */
 export async function renderRoute(path?: string | undefined) {
   path = path ?? window.location.pathname;
+  
   // Get the element where content will be rendered
   const contentContainer = document.getElementById(APP_CONTAINER_CLASSNAME);
 
   if (!path || !contentContainer) return;
 
-  contentContainer.innerHTML = await router(path);
+  const html = await router(path);
+  
+  contentContainer.innerHTML = html;
 
   // Run any code that needs DOM elements here after route render;
   lazyLoadImgs();

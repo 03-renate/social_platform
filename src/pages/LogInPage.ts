@@ -1,5 +1,211 @@
 /**
- * @file _LogInPage.ts
- * @description This file is intended to be a template or placeholder for the Log In Page component of the application.It is currently empty and serves as a reminder to implement the Log In Page functionality in the future.
+ * @file LogInPage.ts
+ * @description This file contains the Log In Page component with proper authentication.
  * @author [Your Name]
  */
+
+import { renderRoute } from "../router";
+import { loginUser, fetchApiKey } from "../services/api/client";
+import { setLocalItem } from "../utils/storage";
+
+export default async function LoginPage() {
+  // Set up event listeners after DOM is updated
+  setTimeout(() => {
+    const form = document.getElementById("loginForm") as HTMLFormElement;
+    if (form) {
+      const submitBtn = form.querySelector("button[type='submit']") as HTMLButtonElement;
+      
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        
+        const emailInput = document.getElementById("loginEmail") as HTMLInputElement;
+        const passwordInput = document.getElementById("loginPassword") as HTMLInputElement;
+        const formError = document.getElementById("loginMessage");
+
+        if (!emailInput || !passwordInput) {
+          console.error("Form inputs not found");
+          return;
+        }
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        // Reset previous messages
+        if (formError) {
+          formError.textContent = "";
+          formError.style.color = "red";
+        }
+
+        // Enhanced validation with specific error messages
+        if (!email && !password) {
+          if (formError) formError.textContent = "Please enter both email and password.";
+          return;
+        }
+        
+        if (!email) {
+          if (formError) formError.textContent = "Please enter your email address.";
+          return;
+        }
+        
+        if (!password) {
+          if (formError) formError.textContent = "Please enter your password.";
+          return;
+        }
+
+        // Email format validation
+        if (!email.includes("@")) {
+          if (formError) formError.textContent = "Please enter a valid email address.";
+          return;
+        }
+
+        // Noroff email validation
+        if (!email.endsWith("@stud.noroff.no")) {
+          if (formError) formError.textContent = "Please use your @stud.noroff.no email address.";
+          return;
+        }
+
+        // Password length validation
+        if (password.length < 8) {
+          if (formError) formError.textContent = "Password must be at least 8 characters long.";
+          return;
+        }
+
+        // Disable form during submission
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "🔄 Signing In...";
+        }
+
+        try {
+          console.log("Attempting login with:", { email });
+          const result = await loginUser({ email, password });
+          console.log("Login API result:", result);
+          
+          if (result.errors && result.errors.length > 0) {
+            // Handle API errors with specific messages
+            const errorMessage = result.errors[0]?.message || "Login failed.";
+            
+            if (formError) {
+              // Provide more specific error messages based on API response
+              if (errorMessage.toLowerCase().includes("email")) {
+                formError.textContent = "❌ Email address not found. Please check your email or register for an account.";
+              } else if (errorMessage.toLowerCase().includes("password")) {
+                formError.textContent = "❌ Incorrect password. Please check your password and try again.";
+              } else if (errorMessage.toLowerCase().includes("user") && errorMessage.toLowerCase().includes("not")) {
+                formError.textContent = "❌ No account found with this email. Please register first.";
+              } else if (errorMessage.toLowerCase().includes("invalid")) {
+                formError.textContent = "❌ Invalid login credentials. Please check your email and password.";
+              } else if (errorMessage.toLowerCase().includes("credentials")) {
+                formError.textContent = "❌ Invalid email or password. Please double-check your credentials.";
+              } else {
+                // Show the original API error message if we can't categorize it
+                formError.textContent = `❌ ${errorMessage}`;
+              }
+            }
+          } else if (result.data) {
+            // Successful login
+            const { accessToken, name } = result.data;
+            
+            if (accessToken) {
+              setLocalItem("accessToken", accessToken);
+            }
+            if (name) {
+              setLocalItem("user", name);
+            }
+
+            // Try to get API key
+            try {
+              const apikey = await fetchApiKey(accessToken);
+              if (apikey) {
+                setLocalItem("apiKey", apikey);
+                console.log("API key obtained successfully");
+              }
+            } catch (apiError) {
+              console.warn("Failed to get API key:", apiError);
+              // Continue anyway - API key is optional for basic functionality
+            }
+
+            // Show success message
+            if (formError) {
+              formError.style.color = "green";
+              formError.textContent = "✅ Login successful! Redirecting to your dashboard...";
+            }
+
+            // Redirect to home page
+            setTimeout(() => {
+              history.pushState({ path: "/" }, "", "/");
+              renderRoute("/");
+            }, 1500);
+          } else {
+            // Unexpected response format
+            if (formError) {
+              formError.textContent = "Unexpected response from server.";
+            }
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          if (formError) {
+            if (error instanceof TypeError && error.message.includes("fetch")) {
+              formError.textContent = "🌐 Network error. Please check your internet connection and try again.";
+            } else {
+              formError.textContent = "⚠️ Something went wrong. Please try again in a moment.";
+            }
+          }
+        } finally {
+          // Re-enable form
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "🚀 Sign In";
+          }
+        }
+      });
+    }
+
+    // Handle register link
+    const registerLink = document.getElementById("register-link");
+    if (registerLink) {
+      registerLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        history.pushState({ path: "/register" }, "", "/register");
+        renderRoute("/register");
+      });
+    }
+  }, 0);
+
+  return `
+    <div class="page active" id="loginPage">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h1>Welcome Back</h1>
+                <div id="loginMessage" style="margin-bottom: 1rem; text-align: center; font-weight: 500;"></div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="Enter your @stud.noroff.no email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                        🚀 Sign In
+                    </button>
+                </form>
+                
+                <div class="login-tips" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                    <div style="color: #94a3b8; margin-bottom: 0.5rem;"><strong>💡 Login Tips:</strong></div>
+                    <ul style="color: #64748b; margin: 0; padding-left: 1.2rem;">
+                        <li>Use your @stud.noroff.no email address</li>
+                        <li>Password must be at least 8 characters</li>
+                        <li>Make sure you've registered an account first</li>
+                    </ul>
+                </div>
+                
+                <div class="auth-links">
+                    <p>Don't have an account? <a href="#" id="register-link">Create one here</a></p>
+                    
+                </div>
+        </div>
+    </div>
+  `;
+}

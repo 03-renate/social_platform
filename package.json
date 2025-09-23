@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./public/tailwind.css --watch",
     "preview": "vite preview",
     "test": "vitest",
     "format": "prettier --write ."

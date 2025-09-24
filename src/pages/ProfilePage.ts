@@ -225,6 +225,12 @@ function setupTabs(root: HTMLElement, username?: string) {
   async function renderTab(index: number) {
   navTabs.forEach(t => t.classList.remove('active'));
   navTabs[index].classList.add('active');
+  
+  // Add a type guard to ensure username is defined before calling fetchPosts
+  if (!username) {
+    contentArea.innerHTML = "<p>Please provide a username to view posts.</p>";
+    return;
+  }
 
   if (index === 0) { // Posts
     const posts = await fetchPosts(username);
@@ -246,7 +252,6 @@ function setupTabs(root: HTMLElement, username?: string) {
   // Render default tab (Posts) immediately
   renderTab(0);
 }
-
 
 
 // ---------------- UPDATE DOM ----------------

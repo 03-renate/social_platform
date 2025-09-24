@@ -5,17 +5,16 @@
  * @author [Your Name]
  */
 
-
-import { API_URL } from "../../constant";
-import { getLocalItem } from "../../utils/storage";
-import { ApiError } from "../error/error";
-import type { 
-  LoginCredentials, 
-  RegisterData, 
-  ApiResponse, 
-  LoginResponse, 
-  RegisterResponse 
-} from "../../types/index";
+import { API_URL } from '../../constant';
+import { getLocalItem } from '../../utils/storage';
+import { ApiError } from '../error/error';
+import type {
+  LoginCredentials,
+  RegisterData,
+  ApiResponse,
+  LoginResponse,
+  RegisterResponse,
+} from '../../types/index';
 
 interface ApiClientOptions extends RequestInit {
   body?: BodyInit | null | undefined | string;
@@ -26,7 +25,7 @@ type Endpoint = string;
 // TODO: Insert correct API key from storage.
 
 // const API_KEY_HEADER = "Dummy-API-Key";
-const API_KEY_HEADER = "X-Noroff-API-Key";
+const API_KEY_HEADER = 'X-Noroff-API-Key';
 
 /**
  * Makes an HTTP request to the specified API endpoint with the given options.
@@ -47,7 +46,7 @@ async function apiClient(endpoint: string, options: ApiClientOptions = {}) {
   const headers: Record<string, string> = {};
 
   const config: RequestInit = {
-    method: body ? "POST" : "GET",
+    method: body ? 'POST' : 'GET',
     ...customOptions,
     headers: {
       ...headers,
@@ -62,37 +61,30 @@ async function apiClient(endpoint: string, options: ApiClientOptions = {}) {
     } else {
       // Otherwise, stringify as JSON and set the header
       config.body = JSON.stringify(body);
-      (config.headers as Record<string, string>)["Content-Type"] =
-        "application/json";
+      (config.headers as Record<string, string>)['Content-Type'] =
+        'application/json';
     }
   }
 
-  const apiKey = getLocalItem("apiKey");
-  const accessToken = getLocalItem("accessToken");
+  const apiKey = getLocalItem('apiKey');
+  const accessToken = getLocalItem('accessToken');
 
   if (apiKey)
     (config.headers as Record<string, string>)[API_KEY_HEADER] = apiKey;
   if (accessToken)
-    (config.headers as Record<string, string>)[
-      "Authorization"
-    ] = `Bearer ${accessToken}`;
-
-  // Debug log for headers
-  console.log("API Request Headers:", {
-    [API_KEY_HEADER]: apiKey,
-    Authorization: accessToken ? `Bearer ${accessToken}` : undefined,
-  });
+    (config.headers as Record<string, string>)['Authorization'] =
+      `Bearer ${accessToken}`;
 
   try {
     const response = await fetch(API_URL + endpoint, config);
 
     // Check if the response is empty before trying to parse JSON
-    const contentType = response.headers.get("content-type");
+    const contentType = response.headers.get('content-type');
 
     if (
       response.status === 204 ||
       !contentType ||
-      !contentType.includes("application/json")
+      !contentType.includes('application/json')
     ) {
       if (!response.ok) {
         throw new ApiError(`HTTP Error: ${response.status}`, response.status);
@@ -118,7 +110,7 @@ async function apiClient(endpoint: string, options: ApiClientOptions = {}) {
       throw error;
     }
 
-    throw new Error("A network or client error occurred.");
+    throw new Error('A network or client error occurred.');
   }
 }
 
@@ -148,9 +140,9 @@ export const post = <T>(endpoint: Endpoint, body: T) =>
   apiClient(endpoint, { body: JSON.stringify(body) });
 
 export const put = <T>(endpoint: Endpoint, body: T) =>
-  apiClient(endpoint, { method: "PUT", body: JSON.stringify(body) });
+  apiClient(endpoint, { method: 'PUT', body: JSON.stringify(body) });
 export const del = (endpoint: Endpoint) =>
-  apiClient(endpoint, { method: "DELETE" });
+  apiClient(endpoint, { method: 'DELETE' });
 
 //  changes done by Hammad.
 
@@ -159,10 +151,12 @@ export const del = (endpoint: Endpoint) =>
  * @param data Object containing name, email, and password
  * @returns API response JSON
  */
-export async function registerUser(data: RegisterData): Promise<ApiResponse<RegisterResponse>> {
-  const response = await fetch("https://v2.api.noroff.dev/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+export async function registerUser(
+  data: RegisterData
+): Promise<ApiResponse<RegisterResponse>> {
+  const response = await fetch('https://v2.api.noroff.dev/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   return response.json();
@@ -173,10 +167,12 @@ export async function registerUser(data: RegisterData): Promise<ApiResponse<Regi
  * @param data Object containing email and password
  * @returns API response JSON
  */
-export async function loginUser(data: LoginCredentials): Promise<ApiResponse<LoginResponse>> {
-  const response = await fetch("https://v2.api.noroff.dev/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+export async function loginUser(
+  data: LoginCredentials
+): Promise<ApiResponse<LoginResponse>> {
+  const response = await fetch('https://v2.api.noroff.dev/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   return response.json();
@@ -209,9 +205,9 @@ export async function fetchApiKey(
   accessToken: string
 ): Promise<string | undefined> {
   const response = await fetch(
-    "https://v2.api.noroff.dev/auth/create-api-key",
+    'https://v2.api.noroff.dev/auth/create-api-key',
     {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -226,6 +222,5 @@ export async function fetchApiKey(
 
   const data = await response.json();
 
-  console.log("API raw response:", data); // 🔍 check structure
   return data?.data?.key;
 }

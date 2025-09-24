@@ -5,54 +5,54 @@
  * @author Your Name
  */
 
-import { renderRoute } from "../router";
+import { renderRoute } from '../router';
 
 export default async function FeedPage() {
   // Set up navigation event listeners after DOM is rendered
   setTimeout(() => {
-    const loginBtn = document.getElementById("nav-login");
-    const registerBtn = document.getElementById("nav-register");
-    const profileBtn = document.getElementById("nav-profile");
-    const ctaRegisterBtn = document.getElementById("cta-register");
-    const ctaLoginBtn = document.getElementById("cta-login");
+    const loginBtn = document.getElementById('nav-login');
+    const registerBtn = document.getElementById('nav-register');
+    const profileBtn = document.getElementById('nav-profile');
+    const ctaRegisterBtn = document.getElementById('cta-register');
+    const ctaLoginBtn = document.getElementById('cta-login');
 
     if (loginBtn) {
-      loginBtn.addEventListener("click", (e) => {
+      loginBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({ path: "/login" }, "", "/login");
-        renderRoute("/login");
+        history.pushState({ path: '/login' }, '', '/login');
+        renderRoute('/login');
       });
     }
 
     if (registerBtn) {
-      registerBtn.addEventListener("click", (e) => {
+      registerBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({ path: "/register" }, "", "/register");
-        renderRoute("/register");
+        history.pushState({ path: '/register' }, '', '/register');
+        renderRoute('/register');
       });
     }
 
     if (profileBtn) {
-      profileBtn.addEventListener("click", (e) => {
+      profileBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({ path: "/profile" }, "", "/profile");
-        renderRoute("/profile");
+        history.pushState({ path: '/profile' }, '', '/profile');
+        renderRoute('/profile');
       });
     }
 
     if (ctaRegisterBtn) {
-      ctaRegisterBtn.addEventListener("click", (e) => {
+      ctaRegisterBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({ path: "/register" }, "", "/register");
-        renderRoute("/register");
+        history.pushState({ path: '/register' }, '', '/register');
+        renderRoute('/register');
       });
     }
 
     if (ctaLoginBtn) {
-      ctaLoginBtn.addEventListener("click", (e) => {
+      ctaLoginBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({ path: "/login" }, "", "/login");
-        renderRoute("/login");
+        history.pushState({ path: '/login' }, '', '/login');
+        renderRoute('/login');
       });
     }
   }, 0);

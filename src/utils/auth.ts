@@ -21,7 +21,7 @@ export function getCurrentUser() {
   return {
     accessToken: getLocalItem('accessToken'),
     user: getLocalItem('user'),
-    apiKey: getLocalItem('apiKey')
+    apiKey: getLocalItem('apiKey'),
   };
 }
 
@@ -40,7 +40,7 @@ export function logout() {
 export function isTokenExpired(): boolean {
   const token = getLocalItem('accessToken');
   if (!token) return true;
-  
+
   try {
     // Basic JWT expiration check
     const payload = JSON.parse(atob(token.split('.')[1]));

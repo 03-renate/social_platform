@@ -11,8 +11,8 @@ import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import { lazyLoadImgs } from '../utils/lazy-load-img';
 import { APP_CONTAINER_CLASSNAME } from '../constant';
-import LoginPage from "../pages/LogInPage";
-import RegisterPage from "../pages/RegisterPage";
+import LoginPage from '../pages/LogInPage';
+import RegisterPage from '../pages/RegisterPage';
 
 const PATHS = {
   home: {
@@ -23,12 +23,12 @@ const PATHS = {
     url: '/profile',
     component: ProfilePage,
   },
-   login: {
-    url: "/login",
+  login: {
+    url: '/login',
     component: LoginPage,
   },
   register: {
-    url: "/register",
+    url: '/register',
     component: RegisterPage,
   },
 } as const;
@@ -72,15 +72,33 @@ export default async function router(
  */
 export async function renderRoute(path?: string | undefined) {
   path = path ?? window.location.pathname;
-  
+
   // Get the element where content will be rendered
   const contentContainer = document.getElementById(APP_CONTAINER_CLASSNAME);
 
   if (!path || !contentContainer) return;
 
+  // Show loading screen for login and register pages
+  const loadingScreen = (window as any).loadingScreen;
+  if (loadingScreen && (path === '/login' || path === '/register')) {
+    loadingScreen.showWithMessage(
+      path === '/login' ? 'Loading Sign In...' : 'Loading Registration...'
+    );
+
+    // Add a small delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
   const html = await router(path);
-  
+
   contentContainer.innerHTML = html;
+
+  // Hide loading screen after content is rendered
+  if (loadingScreen && (path === '/login' || path === '/register')) {
+    setTimeout(() => {
+      loadingScreen.hideLoadingScreen();
+    }, 500);
+  }
 
   // Run any code that needs DOM elements here after route render;
   lazyLoadImgs();

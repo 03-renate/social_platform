@@ -1,0 +1,262 @@
+/**
+ * @file NavbarPage.ts
+ * @description Navigation bar component with brand name, search functionality, and navigation buttons
+ * @author Your Name
+ */
+
+import { renderRoute } from '../router';
+import { isLoggedIn, logout } from '../utils/auth';
+
+export default function NavbarPage() {
+  const userLoggedIn = isLoggedIn();
+
+  return `
+    <nav class="navbar">
+      <div class="navbar-container">
+        <!-- Brand/Logo Section -->
+        <div class="navbar-brand">
+          <h1 class="brand-name">Social Media</h1>
+        </div>
+
+        <!-- Search Bar Section -->
+        <div class="navbar-search">
+          <div class="search-container">
+            <input 
+              type="text" 
+              class="search-input" 
+              placeholder="Search posts, users, or hashtags..." 
+              id="navbar-search"
+            />
+            <button class="search-btn" id="search-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Links Section -->
+        <div class="navbar-nav">
+          <button class="nav-btn nav-feed" id="nav-feed">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9,22 9,12 15,12 15,22"></polyline>
+            </svg>
+            Feed
+          </button>
+          
+          <button class="nav-btn nav-profile" id="nav-profile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Profile
+          </button>
+          
+          ${
+            userLoggedIn
+              ? `
+            <button class="nav-btn nav-logout" id="nav-logout">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16,17 21,12 16,7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Logout
+            </button>
+          `
+              : `
+            <button class="nav-btn nav-login" id="nav-login">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10,17 15,12 10,7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+              </svg>
+              Login
+            </button>
+          `
+          }
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+    </nav>
+  `;
+}
+
+/**
+ * Initialize navbar functionality
+ * Sets up event listeners for navigation and search
+ */
+export function initNavbar() {
+  // Navigation event listeners
+  const feedBtn = document.getElementById('nav-feed');
+  const profileBtn = document.getElementById('nav-profile');
+  const loginBtn = document.getElementById('nav-login');
+  const logoutBtn = document.getElementById('nav-logout');
+  const searchBtn = document.getElementById('search-btn');
+  const searchInput = document.getElementById(
+    'navbar-search'
+  ) as HTMLInputElement;
+  const mobileToggle = document.getElementById('mobile-menu-toggle');
+
+  // Feed page navigation
+  if (feedBtn) {
+    feedBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.pushState({ path: '/' }, '', '/');
+      renderRoute('/');
+    });
+  }
+
+  // Profile page navigation
+  if (profileBtn) {
+    profileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.pushState({ path: '/profile' }, '', '/profile');
+      renderRoute('/profile');
+    });
+  }
+
+  // Login page navigation
+  if (loginBtn) {
+    loginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.pushState({ path: '/login' }, '', '/login');
+      renderRoute('/login');
+    });
+  }
+
+  // Logout functionality
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      // Show confirmation dialog
+      if (confirm('Are you sure you want to logout?')) {
+        // Clear authentication data
+        logout();
+
+        // Update navbar to show login button
+        updateNavbarAfterLogout();
+
+        // Navigate to feed page
+        history.pushState({ path: '/' }, '', '/');
+        renderRoute('/');
+
+        // Show success message
+        showLogoutMessage();
+      }
+    });
+  }
+
+  // Search functionality
+  if (searchBtn && searchInput) {
+    const handleSearch = () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        console.log('Searching for:', query);
+        // TODO: Implement search functionality
+        // This could navigate to a search results page or filter current content
+      }
+    };
+
+    searchBtn.addEventListener('click', handleSearch);
+
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleSearch();
+      }
+    });
+  }
+
+  // Mobile menu toggle
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', () => {
+      const navbar = document.querySelector('.navbar');
+      navbar?.classList.toggle('mobile-menu-open');
+    });
+  }
+
+  // Update active navigation based on current path
+  updateActiveNav();
+
+  // Make updateActiveNav available globally for route changes
+  (window as any).updateActiveNav = updateActiveNav;
+  (window as any).updateNavbarAfterLogout = updateNavbarAfterLogout;
+}
+
+/**
+ * Update active navigation button based on current path
+ */
+function updateActiveNav() {
+  const currentPath = window.location.pathname;
+  const navButtons = document.querySelectorAll('.nav-btn');
+
+  // Remove active class from all buttons
+  navButtons.forEach((btn) => btn.classList.remove('active'));
+
+  // Add active class to current page button
+  if (currentPath === '/' || currentPath === '/feed') {
+    document.getElementById('nav-feed')?.classList.add('active');
+  } else if (currentPath === '/profile') {
+    document.getElementById('nav-profile')?.classList.add('active');
+  } else if (currentPath === '/login') {
+    document.getElementById('nav-login')?.classList.add('active');
+  }
+}
+
+/**
+ * Update navbar after user logs out
+ * Replaces logout button with login button
+ */
+function updateNavbarAfterLogout() {
+  const navContainer = document.querySelector('.navbar-nav');
+  if (navContainer) {
+    // Remove existing navbar and recreate it
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+      navbar.remove();
+    }
+
+    // Re-add updated navbar
+    const newNavbar = NavbarPage();
+    document.body.insertAdjacentHTML('afterbegin', newNavbar);
+
+    // Re-initialize navbar
+    initNavbar();
+  }
+}
+
+/**
+ * Show logout success message
+ */
+function showLogoutMessage() {
+  // Create temporary notification
+  const notification = document.createElement('div');
+  notification.className = 'logout-notification';
+  notification.innerHTML = `
+    <div class="notification-content">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 12l2 2 4-4"></path>
+        <circle cx="12" cy="12" r="9"></circle>
+      </svg>
+      Successfully logged out!
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.parentNode.removeChild(notification);
+    }
+  }, 3000);
+}

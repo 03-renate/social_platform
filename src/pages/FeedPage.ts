@@ -8,37 +8,10 @@
 import { renderRoute } from '../router';
 
 export default async function FeedPage() {
-  // Set up navigation event listeners after DOM is rendered
+  // Set up CTA button event listeners after DOM is rendered
   setTimeout(() => {
-    const loginBtn = document.getElementById('nav-login');
-    const registerBtn = document.getElementById('nav-register');
-    const profileBtn = document.getElementById('nav-profile');
     const ctaRegisterBtn = document.getElementById('cta-register');
     const ctaLoginBtn = document.getElementById('cta-login');
-
-    if (loginBtn) {
-      loginBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({ path: '/login' }, '', '/login');
-        renderRoute('/login');
-      });
-    }
-
-    if (registerBtn) {
-      registerBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({ path: '/register' }, '', '/register');
-        renderRoute('/register');
-      });
-    }
-
-    if (profileBtn) {
-      profileBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({ path: '/profile' }, '', '/profile');
-        renderRoute('/profile');
-      });
-    }
 
     if (ctaRegisterBtn) {
       ctaRegisterBtn.addEventListener('click', (e) => {
@@ -59,29 +32,6 @@ export default async function FeedPage() {
 
   return `
     <div class="feed-page page active">
-      <!-- Navigation Bar -->
-      <nav class="navbar">
-        <div class="navbar-container">
-          <div class="navbar-brand">
-            <h2>🌐 Social Platform</h2>
-          </div>
-          <div class="navbar-menu">
-            <a href="/login" id="nav-login" class="nav-item">
-              <span class="nav-icon">🔑</span>
-              <span class="nav-text">Login</span>
-            </a>
-            <a href="/register" id="nav-register" class="nav-item">
-              <span class="nav-icon">✨</span>
-              <span class="nav-text">Register</span>
-            </a>
-            <a href="/profile" id="nav-profile" class="nav-item">
-              <span class="nav-icon">👤</span>
-              <span class="nav-text">Profile</span>
-            </a>
-          </div>
-        </div>
-      </nav>
-
       <!-- Main Content -->
       <main class="main-content">
         <div class="hero-section">

@@ -164,6 +164,11 @@ export default async function LoginPage() {
                 '✅ Login successful! Redirecting to your dashboard...';
             }
 
+            // Refresh navbar to show logout button
+            if (typeof (window as any).refreshNavbar === 'function') {
+              (window as any).refreshNavbar();
+            }
+
             // Redirect to home page
             setTimeout(() => {
               history.pushState({ path: '/' }, '', '/');

@@ -7,6 +7,43 @@
 import { renderRoute } from '../router';
 import { isLoggedIn, logout } from '../utils/auth';
 
+// TypeScript interfaces and types for NavbarPage
+export interface NavbarElements {
+  feedBtn: HTMLElement | null;
+  profileBtn: HTMLElement | null;
+  loginBtn: HTMLElement | null;
+  logoutBtn: HTMLElement | null;
+  searchBtn: HTMLElement | null;
+  searchInput: HTMLInputElement | null;
+  mobileToggle: HTMLElement | null;
+}
+
+export interface SearchHandler {
+  onSearch: (query: string) => void;
+}
+
+export interface NavbarConfig {
+  brandName: string;
+  searchPlaceholder: string;
+  showSearch: boolean;
+  showMobileMenu: boolean;
+}
+
+export interface NavbarState {
+  isLoggedIn: boolean;
+  currentPath: string;
+}
+
+export interface NotificationConfig {
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  duration?: number;
+}
+
+export type NavbarEventHandler = (event: Event) => void;
+export type NavigationRoute = '/' | '/profile' | '/login' | '/register';
+export type NavbarTheme = 'light' | 'dark' | 'auto';
+
 export default function NavbarPage() {
   const userLoggedIn = isLoggedIn();
 

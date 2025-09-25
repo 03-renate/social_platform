@@ -6,7 +6,8 @@
  * @author Your Name
  */
 
-import type { Post } from './dummyjson-types';
+// import type { Post } from './dummyjson-types';
+import type { Post } from './noroff-types';
 
 export interface User {
   id: number;
@@ -72,4 +73,51 @@ export class NetworkError extends Error {
     super(message);
     this.name = 'NetworkError';
   }
+}
+
+// ## Authentication interfaces for login/register
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  bio?: string;
+}
+
+// ## API Response interfaces
+
+export interface ApiResponse<T> {
+  data?: T;
+  errors?: Array<{
+    message: string;
+    code?: string;
+  }>;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  name: string;
+  email: string;
+}
+
+export interface RegisterResponse {
+  name: string;
+  email: string;
+  id: number;
+}
+
+// ## Form handling interfaces
+
+export interface FormElements {
+  [key: string]: HTMLInputElement | HTMLTextAreaElement;
+}
+
+export interface FormValidationResult {
+  isValid: boolean;
+  errors: string[];
 }

@@ -1,5 +1,15 @@
 /**
  * @file error.ts
- * @description This file is intended to be a template or placeholder for the Error handling service of the application. It is currently empty and serves as a reminder to implement the Error handling functionality in the future.
+ * @description This file contains error handling classes for the application.
  * @author [Your Name]
  */
+
+export class ApiError extends Error {
+  public statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+  }
+}

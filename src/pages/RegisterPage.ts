@@ -133,25 +133,25 @@ export default async function RegisterPage() {
                 errorMessage.toLowerCase().includes('exist')
               ) {
                 formError.textContent =
-                  ' An account with this email already exists. Try logging in instead.';
+                  '❌ An account with this email already exists. Try logging in instead.';
               } else if (
                 errorMessage.toLowerCase().includes('email') &&
                 errorMessage.toLowerCase().includes('invalid')
               ) {
                 formError.textContent =
-                  ' Please enter a valid @stud.noroff.no email address.';
+                  '❌ Please enter a valid @stud.noroff.no email address.';
               } else if (errorMessage.toLowerCase().includes('password')) {
                 formError.textContent =
-                  " Password doesn't meet requirements. Use at least 8 characters.";
+                  "❌ Password doesn't meet requirements. Use at least 8 characters.";
               } else if (errorMessage.toLowerCase().includes('name')) {
                 formError.textContent =
-                  ' Please enter a valid name (at least 2 characters).';
+                  '❌ Please enter a valid name (at least 2 characters).';
               } else if (errorMessage.toLowerCase().includes('already')) {
                 formError.textContent =
-                  ' This email is already registered. Please use the login page.';
+                  '❌ This email is already registered. Please use the login page.';
               } else {
                 // Show the original API error message if we can't categorize it
-                formError.textContent = ` ${errorMessage}`;
+                formError.textContent = `❌ ${errorMessage}`;
               }
             }
           } else if (result.data) {
@@ -167,8 +167,8 @@ export default async function RegisterPage() {
 
             // Redirect to login page after success
             setTimeout(() => {
-              history.pushState({ path: '/' }, '', '/');
-              renderRoute('/');
+              history.pushState({ path: '/login' }, '', '/login');
+              renderRoute('/login');
             }, 2000);
           } else {
             // Unexpected response format
@@ -202,8 +202,8 @@ export default async function RegisterPage() {
     if (loginLink) {
       loginLink.addEventListener('click', (e) => {
         e.preventDefault();
-        history.pushState({ path: '/' }, '', '/');
-        renderRoute('/');
+        history.pushState({ path: '/login' }, '', '/login');
+        renderRoute('/login');
       });
     }
   }, 0);

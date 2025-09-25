@@ -6,11 +6,6 @@
 
 import { renderRoute } from '../router';
 import { isLoggedIn, logout } from '../utils/auth';
-import {
-  getAllPosts,
-  getPublicPosts,
-  type NoroffPost,
-} from '../services/posts/posts';
 
 // TypeScript interfaces and types for NavbarPage
 export interface NavbarElements {
@@ -46,7 +41,7 @@ export interface NotificationConfig {
 }
 
 export type NavbarEventHandler = (event: Event) => void;
-export type NavigationRoute = '/' | '/feed' | '/profile' | '/register';
+export type NavigationRoute = '/' | '/profile' | '/login' | '/register';
 export type NavbarTheme = 'light' | 'dark' | 'auto';
 
 export default function NavbarPage() {
@@ -152,8 +147,8 @@ export function initNavbar() {
   if (feedBtn) {
     feedBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      history.pushState({ path: '/feed' }, '', '/feed');
-      renderRoute('/feed');
+      history.pushState({ path: '/' }, '', '/');
+      renderRoute('/');
     });
   }
 
@@ -170,8 +165,8 @@ export function initNavbar() {
   if (loginBtn) {
     loginBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      history.pushState({ path: '/' }, '', '/');
-      renderRoute('/');
+      history.pushState({ path: '/login' }, '', '/login');
+      renderRoute('/login');
     });
   }
 
@@ -188,7 +183,7 @@ export function initNavbar() {
         // Update navbar to show login button
         updateNavbarAfterLogout();
 
-        // Navigate to login page
+        // Navigate to feed page
         history.pushState({ path: '/' }, '', '/');
         renderRoute('/');
 
@@ -198,81 +193,22 @@ export function initNavbar() {
     });
   }
 
-  // Enhanced Search functionality
+  // Search functionality
   if (searchBtn && searchInput) {
-    let allPosts: NoroffPost[] = [];
-
-    // Load posts for search functionality
-    const loadPostsForSearch = async () => {
-      try {
-        let postsResponse;
-        if (isLoggedIn()) {
-          // Authenticated users get personalized posts
-          postsResponse = await getAllPosts(100, 1);
-        } else {
-          // Unauthenticated users get public posts
-          postsResponse = await getPublicPosts(100, 1);
-        }
-        allPosts = postsResponse.data;
-      } catch (error) {
-        console.error('Error loading posts for search:', error);
-        allPosts = [];
-      }
-    };
-
-    // Load posts when page loads
-    loadPostsForSearch();
-
-    // Enhanced search input handler
-    const handleSearchInput = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const searchTerm = target.value.toLowerCase().trim();
-
-      if (searchTerm === '') {
-        // Clear search - trigger reload of original feed
-        (window as any).searchQuery = null;
-        if (window.location.pathname === '/feed') {
-          renderRoute('/feed');
-        }
-        return;
-      }
-
-      // Filter posts by content and author name
-      const filteredPosts = allPosts.filter(
-        (post) =>
-          post.body.toLowerCase().includes(searchTerm) ||
-          post.title.toLowerCase().includes(searchTerm) ||
-          post.author.name.toLowerCase().includes(searchTerm)
-      );
-
-      // Store search results globally for FeedPage to use
-      (window as any).searchQuery = searchTerm;
-      (window as any).searchResults = filteredPosts;
-
-      // Navigate to feed to show search results
-      if (window.location.pathname !== '/feed') {
-        history.pushState({ path: '/feed' }, '', '/feed');
-      }
-      renderRoute('/feed');
-    };
-
-    // Enhanced search button handler
-    const handleSearchClick = () => {
+    const handleSearch = () => {
       const query = searchInput.value.trim();
       if (query) {
-        const syntheticEvent = { target: searchInput } as unknown as Event;
-        handleSearchInput(syntheticEvent);
+        console.log('Searching for:', query);
+        // TODO: Implement search functionality
+        // This could navigate to a search results page or filter current content
       }
     };
 
-    // Add event listeners
-    searchInput.addEventListener('input', handleSearchInput);
-    searchBtn.addEventListener('click', handleSearchClick);
+    searchBtn.addEventListener('click', handleSearch);
 
-    // Enhanced keyboard shortcuts
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        handleSearchClick();
+        handleSearch();
       }
     });
   }
@@ -285,96 +221,12 @@ export function initNavbar() {
     });
   }
 
-  // Enhanced Global Event Listeners
-  setupGlobalEventListeners(searchInput);
-
   // Update active navigation based on current path
   updateActiveNav();
 
   // Make updateActiveNav available globally for route changes
   (window as any).updateActiveNav = updateActiveNav;
   (window as any).updateNavbarAfterLogout = updateNavbarAfterLogout;
-}
-
-/**
- * Setup enhanced global event listeners for keyboard shortcuts and interactions
- */
-function setupGlobalEventListeners(searchInput: HTMLInputElement | null) {
-  // Enhanced Event Listeners
-  document.addEventListener('click', function (e) {
-    // Close dropdowns when clicking outside
-    if (!e.target || !(e.target as Element).closest('.dropdown')) {
-      document.querySelectorAll('.dropdown-content').forEach((dropdown) => {
-        dropdown.classList.remove('show');
-      });
-    }
-
-    // Close modals when clicking outside
-    if ((e.target as Element).classList?.contains('modal')) {
-      if (typeof (window as any).closeModal === 'function') {
-        (window as any).closeModal();
-      }
-      if (typeof (window as any).closeEditModal === 'function') {
-        (window as any).closeEditModal();
-      }
-    }
-  });
-
-  // Enhanced Keyboard shortcuts
-  document.addEventListener('keydown', function (e) {
-    // Ctrl/Cmd + K for search focus
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      if (searchInput) {
-        searchInput.focus();
-        searchInput.select();
-      }
-    }
-
-    // Escape to clear search and close modals
-    if (e.key === 'Escape') {
-      // Clear search
-      if (searchInput && document.activeElement === searchInput) {
-        searchInput.value = '';
-        searchInput.blur();
-        // Clear search results
-        (window as any).searchQuery = null;
-        if (window.location.pathname === '/feed') {
-          renderRoute('/feed');
-        }
-      }
-
-      // Close modals
-      if (typeof (window as any).closeModal === 'function') {
-        (window as any).closeModal();
-      }
-      if (typeof (window as any).closeEditModal === 'function') {
-        (window as any).closeEditModal();
-      }
-
-      // Close dropdowns
-      document.querySelectorAll('.dropdown-content').forEach((dropdown) => {
-        dropdown.classList.remove('show');
-      });
-    }
-
-    // Ctrl/Cmd + Enter to submit post
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      const activeElement = document.activeElement as HTMLElement;
-      if (activeElement?.id === 'newPostContent') {
-        if (typeof (window as any).createPost === 'function') {
-          (window as any).createPost();
-        }
-      } else if (activeElement?.id === 'editPostContent') {
-        const editForm = document.getElementById(
-          'editPostForm'
-        ) as HTMLFormElement;
-        if (editForm) {
-          editForm.dispatchEvent(new Event('submit'));
-        }
-      }
-    }
-  });
 }
 
 /**
@@ -388,11 +240,11 @@ function updateActiveNav() {
   navButtons.forEach((btn) => btn.classList.remove('active'));
 
   // Add active class to current page button
-  if (currentPath === '/feed') {
+  if (currentPath === '/' || currentPath === '/feed') {
     document.getElementById('nav-feed')?.classList.add('active');
   } else if (currentPath === '/profile') {
     document.getElementById('nav-profile')?.classList.add('active');
-  } else if (currentPath === '/') {
+  } else if (currentPath === '/login') {
     document.getElementById('nav-login')?.classList.add('active');
   }
 }

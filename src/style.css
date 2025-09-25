@@ -2998,3 +2998,35 @@ body {
   background: #7c3aed;
   transform: translateY(-1px);
 }
+
+/* Auth Page Specific Styles */
+.auth-message {
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.login-tips {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.login-tips-title {
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.login-tips ul {
+  color: #64748b;
+  margin: 0;
+  padding-left: 1.2rem;
+}

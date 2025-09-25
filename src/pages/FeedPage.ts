@@ -5,15 +5,13 @@
  * @author Your Name
  */
 import postCard from '../components/postCard';
-import {
-  getAllPosts,
-  getPublicPosts,
-  type NoroffPost,
-} from '../services/posts/posts';
+import { getAllPosts, type NoroffPost } from '../services/posts/posts';
 import {
   getPostComments,
   createComment,
   toggleReaction,
+  type Comment,
+  getTimeAgo,
 } from '../services/interactions/interactions';
 import { renderRoute } from '../router';
 import { isLoggedIn } from '../utils/auth';
@@ -23,59 +21,19 @@ export default async function FeedPage(): Promise<string> {
     // Show loading state initially
     const isUserLoggedIn = isLoggedIn();
 
-    // Check for search results from navbar
-    const searchQuery = (window as any).searchQuery;
-    const searchResults = (window as any).searchResults as NoroffPost[];
-    const isSearchMode = searchQuery && searchResults;
-
-    let posts: NoroffPost[];
-    let postsResponse: any;
-
-    if (isSearchMode) {
-      // Use search results
-      posts = searchResults;
-      postsResponse = {
-        data: posts,
-        meta: {
-          currentPage: 1,
-          pageCount: 1,
-          totalCount: posts.length,
-          isFirstPage: true,
-          isLastPage: true,
-        },
-      };
-    } else {
-      // Get current page from URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const currentPage = parseInt(urlParams.get('page') || '1');
-      const postsPerPage = 15;
-
-      try {
-        // Try to fetch posts from API with pagination
-        if (isUserLoggedIn) {
-          // Authenticated users get personalized posts
-          postsResponse = await getAllPosts(postsPerPage, currentPage);
-        } else {
-          // Unauthenticated users get public posts or sample posts
-          postsResponse = await getPublicPosts(postsPerPage, currentPage);
-        }
-        posts = postsResponse.data;
-      } catch (error) {
-        // If API fails, show empty state (this should rarely happen now)
-        console.log('Failed to load posts:', error);
-        posts = [];
-        postsResponse = {
-          data: [],
-          meta: {
-            currentPage: 1,
-            pageCount: 1,
-            totalCount: 0,
-            isFirstPage: true,
-            isLastPage: true,
-          },
-        };
-      }
+    // If user is not logged in, show welcome page
+    if (!isUserLoggedIn) {
+      return renderWelcomePage();
     }
+
+    // Get current page from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentPage = parseInt(urlParams.get('page') || '1');
+    const postsPerPage = 15;
+
+    // Fetch posts from API with pagination
+    const postsResponse = await getAllPosts(postsPerPage, currentPage);
+    const posts = postsResponse.data;
 
     // Set up event listeners after DOM is rendered
     setTimeout(() => {
@@ -87,8 +45,8 @@ export default async function FeedPage(): Promise<string> {
         <main class="feed-container">
           <!-- Feed Header -->
           <header class="feed-header">
-            <h1 class="feed-title">${isUserLoggedIn ? 'Your Feed' : 'Social Feed'}</h1>
-            <p class="feed-subtitle">${isUserLoggedIn ? `Discover what's happening in your network${!isSearchMode ? ` (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})` : ''}` : `Explore public posts and discover interesting content${!isSearchMode ? ` (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})` : ''}`}</p>
+            <h1 class="feed-title">Your Feed</h1>
+            <p class="feed-subtitle">Discover what's happening in your network (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})</p>
           </header>
 
           <!-- Posts Container -->
@@ -98,23 +56,12 @@ export default async function FeedPage(): Promise<string> {
                 ? posts
                     .map((post, index) => postCard(post, index * 0.1))
                     .join('')
-                : isSearchMode
-                  ? `<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color);">
-                      <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
-                      <h3>No posts found</h3>
-                      <p>Try searching with different keywords</p>
-                    </div>`
-                  : `<div style="text-align: center; padding: 3rem; color: var(--text-muted); background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color);">
-                      <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                      <h3>No posts available</h3>
-                      <p>${isUserLoggedIn ? 'Start following people to see their posts!' : 'No posts to display at the moment. Try refreshing the page.'}</p>
-                      ${!isUserLoggedIn ? `<button class="btn btn-primary" onclick="window.location.href='/'" style="margin-top: 1rem;">🔑 Sign In for More Content</button>` : ''}
-                    </div>`
+                : '<div class="no-posts">No posts available. Start following people to see their posts!</div>'
             }
           </div>
 
-          <!-- Pagination Controls (only show when not in search mode) -->
-          ${!isSearchMode ? renderPaginationControls(postsResponse.meta) : ''}
+          <!-- Pagination Controls -->
+          ${renderPaginationControls(postsResponse.meta)}
         </main>
       </div>
     `;
@@ -127,6 +74,72 @@ export default async function FeedPage(): Promise<string> {
 /**
  * Render welcome page for non-logged in users
  */
+function renderWelcomePage(): string {
+  // Set up CTA button event listeners after DOM is rendered
+  setTimeout(() => {
+    const ctaRegisterBtn = document.getElementById('cta-register');
+    const ctaLoginBtn = document.getElementById('cta-login');
+
+    if (ctaRegisterBtn) {
+      ctaRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        history.pushState({ path: '/register' }, '', '/register');
+        renderRoute('/register');
+      });
+    }
+
+    if (ctaLoginBtn) {
+      ctaLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        history.pushState({ path: '/login' }, '', '/login');
+        renderRoute('/login');
+      });
+    }
+  }, 0);
+
+  return `
+    <div class="feed-page page active">
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="hero-section">
+          <h1>Welcome to Social Platform</h1>
+          <p class="hero-description">Connect, share, and discover with friends around the world.</p>
+          
+          <div class="cta-buttons">
+            <button id="cta-register" class="btn btn-primary">
+              ✨ Join Now
+            </button>
+            <button id="cta-login" class="btn btn-secondary">
+              🔑 Sign In
+            </button>
+          </div>
+        </div>
+
+        <div class="features-section">
+          <h2>Get Started</h2>
+          <div class="feature-cards">
+            <div class="feature-card">
+              <div class="feature-icon">👥</div>
+              <h3>Connect</h3>
+              <p>Find and connect with friends, colleagues, and like-minded people.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">📝</div>
+              <h3>Share</h3>
+              <p>Share your thoughts, experiences, and moments with your network.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🌟</div>
+              <h3>Discover</h3>
+              <p>Explore new content, trends, and opportunities in your feed.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  `;
+}
+
 /**
  * Render error state when posts fail to load
  */
@@ -246,8 +259,48 @@ function handleLikeClick(event: Event): void {
 }
 
 /**
- * Handle like/reaction button clicks
+ * Handle comment button clicks
  */
+function handleCommentClick(event: Event): void {
+  const button = event.currentTarget as HTMLElement;
+  const postId = button.dataset.postId;
+
+  // TODO: Implement comment functionality
+  console.log('Comment on post:', postId);
+}
+
+/**
+ * Handle share button clicks
+ */
+function handleShareClick(event: Event): void {
+  const button = event.currentTarget as HTMLElement;
+  const postId = button.dataset.postId;
+
+  // Simple share functionality
+  if (navigator.share) {
+    navigator.share({
+      title: 'Check out this post',
+      url: window.location.href,
+    });
+  } else {
+    // Fallback - copy to clipboard
+    navigator.clipboard.writeText(window.location.href);
+    alert('Link copied to clipboard!');
+  }
+
+  console.log('Shared post:', postId);
+}
+
+/**
+ * Handle read more button clicks
+ */
+function handleReadMoreClick(event: Event): void {
+  const button = event.currentTarget as HTMLElement;
+  const postId = button.dataset.postId;
+
+  // TODO: Implement full post view
+  console.log('Read more for post:', postId);
+}
 
 /**
  * Handle comment toggle (show/hide comments section)
@@ -531,24 +584,4 @@ function renderPaginationControls(meta: any): string {
     url.pathname + url.search
   );
   renderRoute(window.location.pathname);
-};
-
-/**
- * Clear search results and return to normal feed
- */
-(window as any).clearSearch = function () {
-  // Clear search data
-  (window as any).searchQuery = null;
-  (window as any).searchResults = null;
-
-  // Clear search input in navbar
-  const searchInput = document.getElementById(
-    'navbar-search'
-  ) as HTMLInputElement;
-  if (searchInput) {
-    searchInput.value = '';
-  }
-
-  // Reload feed page to show normal posts
-  renderRoute('/');
 };

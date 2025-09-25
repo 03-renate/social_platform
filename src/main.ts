@@ -32,8 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const navbar = NavbarPage();
   document.body.insertAdjacentHTML('afterbegin', navbar);
 
-  // Initialize navbar functionality
-  initNavbar();
+  // Initialize navbar functionality with a small delay to ensure DOM is ready
+  setTimeout(() => {
+    initNavbar();
+  }, 100);
 
   // Handle initial route
   renderRoute();

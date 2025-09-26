@@ -1,10 +1,10 @@
 /**
  * @file ProfilePage.ts
- * @description Enhanced Profile Page with follow/unfollow functionality integrated with existing app structure
+ * @description Enhanced Profile Page with follow/unfollow functionality
  * @author Your Name
  */
 
-import { type NoroffPost } from '../services/posts/posts'; // Removed getAllPosts since it's not used
+import { type NoroffPost } from '../services/posts/posts';
 import { getLocalItem } from '../utils/storage';
 import { isLoggedIn } from '../utils/auth';
 import { get, put } from '../services/api/client';
@@ -28,8 +28,17 @@ interface UserProfile {
   };
 }
 
-interface ProfileResponse {
-  data: UserProfile;
+interface FollowResponse {
+  data: {
+    name: string;
+    followers: Array<{ name: string; email: string }>;
+    following: Array<{ name: string; email: string }>;
+  };
+}
+
+interface ProfileWithFollowData extends UserProfile {
+  followers?: Array<{ name: string; email: string }>;
+  following?: Array<{ name: string; email: string }>;
 }
 
 /**
@@ -103,13 +112,15 @@ export default async function ProfilePage(): Promise<string> {
 }
 
 /**
- * Fetches user profile data from the API
+ * Fetches user profile data with follow information
  * @param username The username to fetch profile for
- * @returns Promise<UserProfile> User profile data
+ * @returns Promise<ProfileWithFollowData> User profile data
  */
-async function fetchUserProfile(username: string): Promise<UserProfile> {
+async function fetchUserProfile(
+  username: string
+): Promise<ProfileWithFollowData> {
   try {
-    const response = await get<ProfileResponse>(
+    const response = await get<{ data: ProfileWithFollowData }>(
       `/social/profiles/${username}?_followers=true&_following=true`
     );
     return response.data;
@@ -125,6 +136,8 @@ async function fetchUserProfile(username: string): Promise<UserProfile> {
         followers: 0,
         following: 0,
       },
+      followers: [],
+      following: [],
     };
   }
 }
@@ -146,8 +159,60 @@ async function fetchUserPosts(username: string): Promise<NoroffPost[]> {
   }
 }
 
+/**
+ * Checks if current user is following the target user
+ * @param username The username to check follow status for
+ * @returns Promise<boolean> True if following, false otherwise
+ */
+async function checkIfFollowing(username: string): Promise<boolean> {
+  try {
+    const currentUser = getLocalItem('user');
+    if (!currentUser) return false;
+
+    const response = await get<{ data: ProfileWithFollowData }>(
+      `/social/profiles/${currentUser}?_following=true`
+    );
+
+    const following = response.data.following || [];
+    return following.some((user) => user.name === username);
+  } catch (error) {
+    console.error('Error checking follow status:', error);
+    return false;
+  }
+}
+
+/**
+ * Follow a user
+ * @param username The username to follow
+ * @returns Promise<FollowResponse> Response from follow API
+ */
+async function followUser(username: string): Promise<FollowResponse> {
+  try {
+    const response = await put(`/social/profiles/${username}/follow`, {});
+    return response as FollowResponse;
+  } catch (error) {
+    console.error('Error following user:', error);
+    throw new Error('Failed to follow user');
+  }
+}
+
+/**
+ * Unfollow a user
+ * @param username The username to unfollow
+ * @returns Promise<FollowResponse> Response from unfollow API
+ */
+async function unfollowUser(username: string): Promise<FollowResponse> {
+  try {
+    const response = await put(`/social/profiles/${username}/unfollow`, {});
+    return response as FollowResponse;
+  } catch (error) {
+    console.error('Error unfollowing user:', error);
+    throw new Error('Failed to unfollow user');
+  }
+}
+
 function renderProfileHeader(
-  profile: UserProfile,
+  profile: ProfileWithFollowData,
   isOwnProfile: boolean,
   currentUser: string | null
 ): string {
@@ -166,13 +231,28 @@ function renderProfileHeader(
             Back
           </button>
           
-          <!-- Follow Button (only show for other users) -->
+          <!-- Follow Button (only show for other users when logged in) -->
           ${
             !isOwnProfile && isLoggedIn()
               ? `
             <button class="follow-btn" id="follow-btn" data-username="${profile.name}">
-              <span class="follow-text">Follow</span>
-              <span class="unfollow-text" style="display: none;">Unfollow</span>
+              <span class="follow-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <line x1="19" y1="8" x2="19" y2="14"></line>
+                  <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                Follow
+              </span>
+              <span class="unfollow-text" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                Following
+              </span>
             </button>
           `
               : ''
@@ -183,7 +263,6 @@ function renderProfileHeader(
   `;
 }
 
-// Removed isOwnProfile parameter since it's not used in this function
 function renderProfileInfo(profile: UserProfile): string {
   const avatarUrl =
     profile.avatar?.url ||
@@ -191,30 +270,27 @@ function renderProfileInfo(profile: UserProfile): string {
 
   return `
     <div class="profile-info">
-      <!-- Avatar -->
       <div class="profile-avatar">
         <img src="${avatarUrl}" alt="${profile.avatar?.alt || profile.name}" class="avatar-img">
       </div>
       
-      <!-- Basic Info -->
       <div class="profile-details">
         <h1 class="profile-name">${profile.name}</h1>
         <p class="profile-email">@${profile.name.toLowerCase()}</p>
         
         ${profile.bio ? `<p class="profile-bio">${profile.bio}</p>` : ''}
         
-        <!-- Stats -->
         <div class="profile-stats">
           <div class="stat">
             <span class="stat-number">${profile._count.posts}</span>
             <span class="stat-label">Posts</span>
           </div>
           <div class="stat">
-            <span class="stat-number">${profile._count.following}</span>
+            <span class="stat-number" id="following-count">${profile._count.following}</span>
             <span class="stat-label">Following</span>
           </div>
           <div class="stat">
-            <span class="stat-number">${profile._count.followers}</span>
+            <span class="stat-number" id="followers-count">${profile._count.followers}</span>
             <span class="stat-label">Followers</span>
           </div>
         </div>
@@ -281,6 +357,32 @@ function renderProfilePost(post: NoroffPost, index: number): string {
   `;
 }
 
+function renderMediaTab(posts: NoroffPost[]): string {
+  if (posts.length === 0) {
+    return `
+      <div class="empty-state">
+        <div class="empty-icon">🖼️</div>
+        <h3>No media</h3>
+        <p>Photos and videos will appear here.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="media-grid">
+      ${posts
+        .map(
+          (post) => `
+        <div class="media-item">
+          <img src="${post.media!.url}" alt="${post.media!.alt || 'Media'}" class="media-image">
+        </div>
+      `
+        )
+        .join('')}
+    </div>
+  `;
+}
+
 function renderErrorState(message: string): string {
   return `
     <div class="profile-page">
@@ -302,12 +404,126 @@ function initializeProfileInteractions(
   username: string,
   isOwnProfile: boolean
 ): void {
-  // Initialize tabs
   initializeTabs(username);
 
-  // Initialize follow functionality if viewing another user's profile
   if (!isOwnProfile && isLoggedIn()) {
     initializeFollowButton(username);
+  }
+}
+
+/**
+ * Initializes follow button with proper status checking and event handlers
+ * @param username The username to follow/unfollow
+ */
+async function initializeFollowButton(username: string): Promise<void> {
+  const followBtn = document.getElementById('follow-btn') as HTMLButtonElement;
+  if (!followBtn) return;
+
+  try {
+    // Show loading state
+    followBtn.disabled = true;
+    followBtn.innerHTML = '<div class="loading-spinner-small"></div>';
+
+    // Check current follow status
+    const isFollowing = await checkIfFollowing(username);
+    updateFollowButton(followBtn, isFollowing);
+
+    // Add click handler
+    followBtn.addEventListener('click', async () => {
+      const currentlyFollowing = followBtn.classList.contains('following');
+
+      try {
+        followBtn.disabled = true;
+        followBtn.innerHTML = '<div class="loading-spinner-small"></div>';
+
+        if (currentlyFollowing) {
+          await unfollowUser(username);
+          updateFollowButton(followBtn, false);
+          updateFollowerCount(-1);
+          showNotification(`Unfollowed ${username}`, 'success');
+        } else {
+          await followUser(username);
+          updateFollowButton(followBtn, true);
+          updateFollowerCount(1);
+          showNotification(`Now following ${username}`, 'success');
+        }
+      } catch (error) {
+        console.error('Error toggling follow:', error);
+        showNotification('Failed to update follow status', 'error');
+        updateFollowButton(followBtn, currentlyFollowing);
+      } finally {
+        followBtn.disabled = false;
+      }
+    });
+  } catch (error) {
+    console.error('Error initializing follow button:', error);
+    followBtn.disabled = false;
+    followBtn.innerHTML = 'Follow';
+  }
+}
+
+/**
+ * Updates follow button state with safety checks
+ * @param button The follow button element
+ * @param isFollowing Current follow status
+ */
+function updateFollowButton(
+  button: HTMLButtonElement,
+  isFollowing: boolean
+): void {
+  const followText = button.querySelector('.follow-text') as HTMLElement;
+  const unfollowText = button.querySelector('.unfollow-text') as HTMLElement;
+
+  // Safety check for elements
+  if (!followText || !unfollowText) {
+    // Fallback: Update button content manually
+    if (isFollowing) {
+      button.classList.add('following');
+      button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+        Following
+      `;
+    } else {
+      button.classList.remove('following');
+      button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="19" y1="8" x2="19" y2="14"></line>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+        Follow
+      `;
+    }
+    return;
+  }
+
+  // Standard update logic
+  if (isFollowing) {
+    button.classList.add('following');
+    followText.style.display = 'none';
+    unfollowText.style.display = 'inline';
+  } else {
+    button.classList.remove('following');
+    followText.style.display = 'inline';
+    unfollowText.style.display = 'none';
+  }
+}
+
+/**
+ * Updates follower count in UI
+ * @param change The change in follower count (+1 or -1)
+ */
+function updateFollowerCount(change: number): void {
+  const followerCountEl = document.getElementById('followers-count');
+  if (followerCountEl) {
+    const currentCount = parseInt(followerCountEl.textContent || '0');
+    const newCount = Math.max(0, currentCount + change);
+    followerCountEl.textContent = newCount.toString();
   }
 }
 
@@ -319,7 +535,6 @@ function initializeTabs(username: string): void {
 
   tabButtons.forEach((button) => {
     button.addEventListener('click', async () => {
-      // Remove active class from all tabs
       tabButtons.forEach((btn) => btn.classList.remove('active'));
       button.classList.add('active');
 
@@ -369,116 +584,6 @@ async function switchTab(
   }
 }
 
-function renderMediaTab(posts: NoroffPost[]): string {
-  if (posts.length === 0) {
-    return `
-      <div class="empty-state">
-        <div class="empty-icon">🖼️</div>
-        <h3>No media</h3>
-        <p>Photos and videos will appear here.</p>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="media-grid">
-      ${posts
-        .map(
-          (post) => `
-        <div class="media-item">
-          <img src="${post.media!.url}" alt="${post.media!.alt || 'Media'}" class="media-image">
-        </div>
-      `
-        )
-        .join('')}
-    </div>
-  `;
-}
-
-async function initializeFollowButton(username: string): Promise<void> {
-  const followBtn = document.getElementById('follow-btn') as HTMLButtonElement;
-  if (!followBtn) return;
-
-  // Check if already following
-  const isFollowing = await checkIfFollowing(username);
-  updateFollowButton(followBtn, isFollowing);
-
-  followBtn.addEventListener('click', async () => {
-    const currentlyFollowing = followBtn.classList.contains('following');
-
-    try {
-      followBtn.disabled = true;
-      followBtn.innerHTML = '<div class="loading-spinner-small"></div>';
-
-      if (currentlyFollowing) {
-        await unfollowUser(username);
-        updateFollowButton(followBtn, false);
-        showNotification(`Unfollowed ${username}`, 'success');
-      } else {
-        await followUser(username);
-        updateFollowButton(followBtn, true);
-        showNotification(`Following ${username}`, 'success');
-      }
-    } catch (error) {
-      console.error('Error toggling follow:', error);
-      showNotification('Failed to update follow status', 'error');
-    } finally {
-      followBtn.disabled = false;
-    }
-  });
-}
-
-function updateFollowButton(
-  button: HTMLButtonElement,
-  isFollowing: boolean
-): void {
-  const followText = button.querySelector('.follow-text') as HTMLElement;
-  const unfollowText = button.querySelector('.unfollow-text') as HTMLElement;
-
-  if (isFollowing) {
-    button.classList.add('following');
-    followText.style.display = 'none';
-    unfollowText.style.display = 'inline';
-  } else {
-    button.classList.remove('following');
-    followText.style.display = 'inline';
-    unfollowText.style.display = 'none';
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                            Follow/Unfollow API                             */
-/* -------------------------------------------------------------------------- */
-
-async function followUser(username: string): Promise<void> {
-  try {
-    await put(`/social/profiles/${username}/follow`, {});
-  } catch (error) {
-    console.error('Error following user:', error);
-    throw new Error('Failed to follow user');
-  }
-}
-
-async function unfollowUser(username: string): Promise<void> {
-  try {
-    await put(`/social/profiles/${username}/unfollow`, {});
-  } catch (error) {
-    console.error('Error unfollowing user:', error);
-    throw new Error('Failed to unfollow user');
-  }
-}
-
-async function checkIfFollowing(username: string): Promise<boolean> {
-  try {
-    // This would need to be implemented based on available API endpoints
-    // For now, return false as default
-    return false;
-  } catch (error) {
-    console.error('Error checking follow status:', error);
-    return false;
-  }
-}
-
 /* -------------------------------------------------------------------------- */
 /*                            Utility Functions                               */
 /* -------------------------------------------------------------------------- */
@@ -502,7 +607,6 @@ function showNotification(
   message: string,
   type: 'success' | 'error' | 'info' = 'info'
 ): void {
-  // Use the same notification system as your FeedPage
   const notification = document.createElement('div');
   notification.className = `notification ${type}-notification`;
   notification.innerHTML = `<div class="notification-content">${message}</div>`;

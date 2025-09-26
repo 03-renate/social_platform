@@ -5,6 +5,8 @@
  */
 
 // import { post } from "./apiClient.js";
+import { getLocalItem } from '../../utils/storage.js';
+import type { LoginCredentials } from '../../types/index.js';
 
 const ACCESS_TOKEN = 'accessToken';
 // const LOGIN_ENDPOINT = "/auth/login";
@@ -21,10 +23,10 @@ export function isUserLoggedIn() {
 
 /**
  * Logs in a user.
- * @param {object} _credentials The user's email and password.
+ * @param {LoginCredentials} _credentials The user's email and password.
  * @returns {Promise<object>} The user profile data.
  */
-export async function loginUser(_credentials) {
+export async function loginUser(_credentials: LoginCredentials) {
   // TODO: https://lms.noroff.no/mod/book/view.php?id=123585&chapterid=61404
 }
 

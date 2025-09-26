@@ -213,7 +213,7 @@ export default async function RegisterPage() {
         <div class="auth-container">
             <div class="auth-card">
                 <h1>Join Social Platform</h1>
-                <div id="registerMessage" style="margin-bottom: 1rem; text-align: center; font-weight: 500;"></div>
+                <div id="registerMessage" class="auth-message"></div>
                 <form id="registerForm">
                     <div class="form-group">
                         <label for="registerName">Full Name</label>
@@ -231,7 +231,7 @@ export default async function RegisterPage() {
                         <label for="registerBio">Bio (Optional)</label>
                         <textarea id="registerBio" class="form-control" rows="3" placeholder="Tell us about yourself..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                    <button type="submit" class="btn btn-primary auth-submit-btn">
                         ✨ Create Account
                     </button>
                 </form>

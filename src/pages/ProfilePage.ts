@@ -1,6 +1,9 @@
 /**
- * @file ProfilePage.ts
- * @description SPA Profile Page component template and logic.
+ * ProfilePage.ts
+ * This module handles the user profile page, including fetching and displaying
+ * user profile data and posts from the API.
+ * It also manages tab navigation for different content sections.
+ * Dependencies: None (Vanilla TypeScript)
  */
 
 // ---------------- TYPES ----------------
@@ -23,14 +26,12 @@ interface Post {
   title: string;
   body?: string;
   tags?: string[];
-  media?: {
-    url: string;
-    alt: string;
-  };
+  media?: { url: string; alt: string };
   created: string;
   updated: string;
 }
 
+// ---------------- DEFAULT DATA ----------------
 const DEFAULT_PROFILE: UserProfile = {
   name: "User Name",
   username: "username",
@@ -41,64 +42,94 @@ const DEFAULT_PROFILE: UserProfile = {
   joinDate: "Joined N/A",
   following: 0,
   followers: 0,
-  posts: 0
+  posts: 0,
 };
 
-// ---------------- ACCESS INFO FOR TESTING ----------------
-const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibHlyYV9ub3ZhayIsImVtYWlsIjoibHlyYS5ub3Zha0BzdHVkLm5vcm9mZi5ubyIsImlhdCI6MTc1ODY1MzU0OH0.TO-KD1khvNRZTNjuzuWxh-ZwfREYv1xAglzwFoymjwg';
-const API_KEY = 'f7c3eed8-9891-4270-9f46-0ddcb5e3a2b9';
-
-// ---------------- MAIN RENDER FUNCTION ----------------
-export async function renderProfilePage(root: HTMLElement, username?: string) {
-  // Render default profile first
-  root.innerHTML = generateProfileHTML(DEFAULT_PROFILE);
-  setupTabs(root, username);
-
-
-  if (!username) return;
-
-  try {
-    const res = await fetch(`https://v2.api.noroff.dev/social/profiles/${username}`, {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "X-Noroff-API-Key": API_KEY
-      }
-    });
-
-    if (!res.ok) throw new Error("Failed to fetch profile");
-
-    const result = await res.json();
-    const data = result.data;
-
-    const profileData: UserProfile = {
-      name: data.name || DEFAULT_PROFILE.name,
-      username: data.email?.split("@")[0] || DEFAULT_PROFILE.username,
-      avatarUrl: data.avatar?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=3b82f6&color=fff&size=128`,
-      bannerUrl: data.banner?.url,
-      description: data.bio || DEFAULT_PROFILE.description,
-      location: DEFAULT_PROFILE.location,
-      website: DEFAULT_PROFILE.website,
-      joinDate: DEFAULT_PROFILE.joinDate,
-      following: data._count?.following || DEFAULT_PROFILE.following,
-      followers: data._count?.followers || DEFAULT_PROFILE.followers,
-      posts: data._count?.posts || DEFAULT_PROFILE.posts
-    };
-
-    updateProfile(root, profileData);
-
-  } catch (err) {
-    console.error("Failed to fetch profile:", err);
-  }
+// ---------------- STORAGE HELPERS ----------------
+function getAccessToken(): string | null {
+  return localStorage.getItem("accessToken");
 }
 
-// ---------------- FETCH POSTS ----------------
+function getApiKey(): string | null {
+  return localStorage.getItem("apiKey");
+}
+
+function getStoredUser(): UserProfile | null {
+  const userStr = localStorage.getItem("userProfile");
+  if (!userStr) return null;
+  const user = JSON.parse(userStr) as UserProfile;
+  return user.username ? user : null;
+}
+
+// ---------------- UTILS ----------------
+function formatUsername(str: string) {
+  return str
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function updateBanner(bannerUrl?: string) {
+  const bannerDiv = document.querySelector(".profile-header-bg") as HTMLElement;
+  if (!bannerDiv) return;
+
+  bannerDiv.style.backgroundImage = bannerUrl ? `url('${bannerUrl}')` : "none";
+  bannerDiv.style.backgroundSize = "cover";
+  bannerDiv.style.backgroundPosition = "center";
+  if (!bannerUrl) bannerDiv.style.background = "var(--gradient-bg)";
+}
+
+// ---------------- FETCH DATA ----------------
+async function fetchProfile(username: string): Promise<UserProfile> {
+  const safeUsername = username.replace(/\./g, "_");
+  const ACCESS_TOKEN = getAccessToken();
+  const API_KEY = getApiKey();
+  let profileData = getStoredUser() || DEFAULT_PROFILE;
+
+  if (ACCESS_TOKEN && API_KEY && safeUsername) {
+    try {
+      const res = await fetch(`https://v2.api.noroff.dev/social/profiles/${safeUsername}`, {
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "X-Noroff-API-Key": API_KEY,
+        },
+      });
+      if (!res.ok) return profileData;
+
+      const result = await res.json();
+      const data = result.data;
+      profileData = {
+        name: data.name || DEFAULT_PROFILE.name,
+        username: safeUsername,
+        avatarUrl: data.avatar?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=3b82f6&color=fff&size=128`,
+        bannerUrl: data.banner?.url,
+        description: data.bio || DEFAULT_PROFILE.description,
+        location: data.location || DEFAULT_PROFILE.location,
+        website: data.website || DEFAULT_PROFILE.website,
+        joinDate: data.joined || DEFAULT_PROFILE.joinDate,
+        following: data._count?.following || DEFAULT_PROFILE.following,
+        followers: data._count?.followers || DEFAULT_PROFILE.followers,
+        posts: data._count?.posts || DEFAULT_PROFILE.posts,
+      };
+      localStorage.setItem("userProfile", JSON.stringify(profileData));
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+    }
+  }
+
+  return profileData;
+}
+
 async function fetchPosts(username: string): Promise<Post[]> {
+  const safeUsername = username.replace(/\./g, "_");
+  const ACCESS_TOKEN = getAccessToken();
+  const API_KEY = getApiKey();
+  if (!ACCESS_TOKEN || !API_KEY) return [];
+
   try {
-    const res = await fetch(`https://v2.api.noroff.dev/social/profiles/${username}/posts`, {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "X-Noroff-API-Key": API_KEY
-      }
+    const res = await fetch(`https://v2.api.noroff.dev/social/profiles/${safeUsername}/posts`, {
+      headers: { Authorization: `Bearer ${ACCESS_TOKEN}`, "X-Noroff-API-Key": API_KEY },
     });
     if (!res.ok) throw new Error("Failed to fetch posts");
     const result = await res.json();
@@ -109,184 +140,113 @@ async function fetchPosts(username: string): Promise<Post[]> {
   }
 }
 
-// ---------------- HTML GENERATOR ----------------
+// ---------------- HTML GENERATORS ----------------
 function generateProfileHTML(profile: UserProfile) {
   return `
-    <div class="profile-container">
-      <div class="profile-header-bg"></div>
-
-      <div class="profile-content">
-        <div class="profile-info">
-          <div class="profile-avatar-wrapper">
-            <div class="profile-avatar">
-              <img src="${profile.avatarUrl}" alt="Profile" class="profile-avatar-img" />
-            </div>
-          </div>
-
-          <div class="profile-header">
-            <h1 class="profile-name">${profile.name}</h1>
-            <button class="back-btn" id="back-btn">go back <i class="fa-solid fa-arrow-right"></i></button>
-          </div>
-
-          <p class="profile-username">@${profile.username}</p>
-
-          <div class="profile-bio">
-            <p>${profile.description}</p>
-          </div>
-
-          <div class="profile-meta">
-            <span><i class="fa-solid fa-location-dot"></i> ${profile.location}</span>
-            <span class="separator">·</span>
-            <a href="${profile.website}" class="profile-link"><i class="fa-solid fa-link"></i> ${profile.website}</a>
-            <span class="separator">·</span>
-            <span><i class="fa-regular fa-calendar"></i> ${profile.joinDate}</span>
-          </div>
-
-          <div class="profile-stats">
-            <div class="stat">
-              <span class="stat-number">${profile.following}</span>
-              <span class="stat-label">Following</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">${profile.followers}</span>
-              <span class="stat-label">Followers</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">${profile.posts}</span>
-              <span class="stat-label">Posts</span>
-            </div>
-          </div>
-
-          <div class="profile-tabs-wrapper">
-            <nav class="profile-tabs">
-              <button class="tab active"><i class="fa-regular fa-paper-plane"></i> Posts</button>
-              <button class="tab"><i class="fa-solid fa-reply"></i> Replies</button>
-              <button class="tab"><i class="fa-regular fa-image"></i> Media</button>
-              <button class="tab"><i class="fa-solid fa-heart"></i> Likes</button>
-            </nav>
+  <div class="profile-container">
+    <div class="profile-header-bg"></div>
+    <div class="profile-content">
+      <div class="profile-info">
+        <div class="profile-avatar-wrapper">
+          <div class="profile-avatar">
+            <img src="${profile.avatarUrl}" alt="Profile" class="profile-avatar-img"/>
           </div>
         </div>
-      </div>
-
-      <div class="profile-content-area" id="contentArea">
-        <p>Posts will appear here...</p>
+        <div class="profile-header">
+          <h1 class="profile-name">${formatUsername(profile.name)}</h1>
+        </div>
+        <p class="profile-username">@${profile.username}</p>
+        <div class="profile-bio"><p>${profile.description}</p></div>
+        <div class="profile-meta">
+          <span><i class="fa-solid fa-location-dot"></i> ${profile.location}</span>
+          <span class="separator">·</span>
+          <a href="${profile.website}" class="profile-link"><i class="fa-solid fa-link"></i> ${profile.website}</a>
+          <span class="separator">·</span>
+          <span><i class="fa-regular fa-calendar"></i> ${profile.joinDate}</span>
+        </div>
+        <div class="profile-stats">
+          <div class="stat"><span class="stat-number">${profile.following}</span><span class="stat-label">Following</span></div>
+          <div class="stat"><span class="stat-number">${profile.followers}</span><span class="stat-label">Followers</span></div>
+          <div class="stat"><span class="stat-number">${profile.posts}</span><span class="stat-label">Posts</span></div>
+        </div>
+        <div class="profile-tabs-wrapper">
+          <nav class="profile-tabs">
+            <button class="tab active">Posts</button>
+            <button class="tab">Replies</button>
+            <button class="tab">Media</button>
+            <button class="tab">Likes</button>
+          </nav>
+        </div>
       </div>
     </div>
+    <div class="profile-content-area" id="contentArea"><p>Posts will appear here...</p></div>
+  </div>
   `;
 }
 
-function renderPosts(posts: Post[], filterMedia = false): string {
-  const filtered = filterMedia ? posts.filter(p => p.media) : posts;
-  if (!filtered.length) return "<p>No posts to show.</p>";
-
-  return filtered.map(p => `
+function renderPosts(posts: Post[]): string {
+  if (!posts.length) return "<p>No posts to show.</p>";
+  return posts
+    .map(
+      (p) => `
     <div class="post-card">
       <h3>${p.title}</h3>
       ${p.media ? `<img src="${p.media.url}" alt="${p.media.alt}" class="post-media"/>` : ""}
       ${p.body ? `<p>${p.body}</p>` : ""}
-      ${p.tags?.length ? `<p class="tags">${p.tags.map(t => `#${t}`).join(" ")}</p>` : ""}
+      ${p.tags?.length ? `<p class="tags">${p.tags.map((t) => `#${t}`).join(" ")}</p>` : ""}
       <small>Created: ${new Date(p.created).toLocaleString()}</small>
-    </div>
-  `).join("");
+    </div>`
+    )
+    .join("");
 }
 
 function renderMediaGallery(posts: Post[]): string {
-  const mediaPosts = posts.filter(p => p.media);
+  const mediaPosts = posts.filter((p) => p.media);
   if (!mediaPosts.length) return "<p>No media to show.</p>";
-
   return `
     <div class="media-gallery">
-      ${mediaPosts.map(p => `
-        <div class="media-item">
-          <img src="${p.media!.url}" alt="${p.media!.alt}" />
-        </div>
-      `).join("")}
+      ${mediaPosts
+        .map(
+          (p) => `<div class="media-item"><img src="${p.media!.url}" alt="${p.media!.alt}"/></div>`
+        )
+        .join("")}
     </div>
   `;
 }
 
-
-// ---------------- UTILS ----------------
-function formatUsername(str: string) {
-  return str.replace(/_/g, ' ')
-            .split(' ')
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(' ');
+// ---------------- PROFILE PAGE LOGIC ----------------
+export async function ProfilePage(root: HTMLElement, username?: string) {
+  const profile = await fetchProfile(username ?? "");
+  root.innerHTML = generateProfileHTML(profile);
+  updateBanner(profile.bannerUrl);
+  initProfilePage(root);
 }
 
-// ---------------- TABS LOGIC ----------------
-function setupTabs(root: HTMLElement, username?: string) {
-  const navTabs = root.querySelectorAll('.tab');
-  if (!navTabs.length || !username) return;
+export function initProfilePage(root: HTMLElement) {
+  const cachedUser = getStoredUser();
+  if (!cachedUser) return;
 
-  const contentArea = root.querySelector('#contentArea') as HTMLElement;
-  if (!contentArea) return;
+  const username = cachedUser.username;
+  const tabs = root.querySelectorAll(".tab");
+  const contentArea = root.querySelector("#contentArea") as HTMLElement;
+  if (!contentArea || !tabs.length) return;
 
   async function renderTab(index: number) {
-  navTabs.forEach(t => t.classList.remove('active'));
-  navTabs[index].classList.add('active');
-  
-  // Add a type guard to ensure username is defined before calling fetchPosts
-  if (!username) {
-    contentArea.innerHTML = "<p>Please provide a username to view posts.</p>";
-    return;
+    tabs.forEach((t) => t.classList.remove("active"));
+    tabs[index].classList.add("active");
+
+    if (index === 0) {
+      const posts = await fetchPosts(username);
+      contentArea.innerHTML = renderPosts(posts);
+    } else if (index === 2) {
+      const posts = await fetchPosts(username);
+      contentArea.innerHTML = renderMediaGallery(posts);
+    } else {
+      const tabNames = ["Posts", "Replies", "Media", "Likes"];
+      contentArea.innerHTML = `<p>${tabNames[index]} will appear here...</p>`;
+    }
   }
 
-  if (index === 0) { // Posts
-    const posts = await fetchPosts(username);
-    contentArea.innerHTML = renderPosts(posts); // All posts
-  } else if (index === 2) { // Media
-    const posts = await fetchPosts(username);
-    contentArea.innerHTML = renderMediaGallery(posts); // Only images
-  } else {
-    const tabNames = ['Posts', 'Replies', 'Media', 'Likes'];
-    contentArea.innerHTML = `<p>${tabNames[index]} will appear here...</p>`;
-  }
-}
-
-  // Add click listeners
-  navTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => renderTab(index));
-  });
-
-  // Render default tab (Posts) immediately
+  tabs.forEach((tab, i) => tab.addEventListener("click", () => renderTab(i)));
   renderTab(0);
 }
-
-
-// ---------------- UPDATE DOM ----------------
-function updateProfile(root: HTMLElement, profile: UserProfile) {
-  const profileHeaderBg = root.querySelector('.profile-header-bg') as HTMLElement;
-  const profileName = root.querySelector('.profile-name') as HTMLElement;
-  const profileUsername = root.querySelector('.profile-username') as HTMLElement;
-  const profileAvatar = root.querySelector('.profile-avatar-img') as HTMLImageElement;
-  const profileBio = root.querySelector('.profile-bio p') as HTMLElement;
-  const statFollowing = root.querySelector('.profile-stats .stat:nth-child(1) .stat-number') as HTMLElement;
-  const statFollowers = root.querySelector('.profile-stats .stat:nth-child(2) .stat-number') as HTMLElement;
-  const statPosts = root.querySelector('.profile-stats .stat:nth-child(3) .stat-number') as HTMLElement;
-
-  if (!profileHeaderBg || !profileName || !profileUsername || !profileAvatar || !profileBio) return;
-
-  // Banner
-  if (profile.bannerUrl) {
-    profileHeaderBg.style.backgroundImage = `url('${profile.bannerUrl}')`;
-    profileHeaderBg.style.backgroundSize = 'cover';
-    profileHeaderBg.style.backgroundPosition = 'center';
-  } else {
-    profileHeaderBg.style.backgroundImage = '';
-    profileHeaderBg.style.background = 'var(--gradient-bg)';
-  }
-
-  // Update info
-  profileName.textContent = `${formatUsername(profile.name)}`;
-  profileUsername.textContent = `@${profile.username}`;
-  profileAvatar.src = profile.avatarUrl;
-  profileAvatar.alt = `Profile avatar of ${profile.name}`;
-  profileBio.textContent = profile.description;
-
-  // Stats
-  statFollowing.textContent = profile.following.toString();
-  statFollowers.textContent = profile.followers.toString();
-  statPosts.textContent = profile.posts.toString();
-}
-

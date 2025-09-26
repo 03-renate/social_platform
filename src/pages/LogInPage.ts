@@ -154,7 +154,6 @@ export default async function LoginPage() {
               }
             } catch (apiError) {
               console.warn('Failed to get API key:', apiError);
-              // Continue anyway - API key is optional for basic functionality
             }
 
             // Show success message
@@ -251,6 +250,7 @@ export default async function LoginPage() {
                     <p>Don't have an account? <a href="#" id="register-link">Create one here</a></p>
                     
                 </div>
+            </div>
         </div>
     </div>
   `;

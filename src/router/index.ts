@@ -9,6 +9,7 @@
 import FeedPage from '../pages/FeedPage';
 import ProfilePage from '../pages/ProfilePage';
 import NotFoundPage from '../pages/NotFoundPage';
+import SinglePage from '../pages/singlePage';
 import { lazyLoadImgs } from '../utils/lazy-load-img';
 import { APP_CONTAINER_CLASSNAME } from '../constant';
 import LoginPage from '../pages/LogInPage';
@@ -47,6 +48,17 @@ export default async function router(
   currentPath = '',
   routes = PATHS
 ): Promise<string> {
+  // Check for single post route pattern (/post/:id)
+  const postRouteMatch = currentPath.match(/^\/post\/\d+$/);
+  if (postRouteMatch) {
+    // Check if route is protected and user is not logged in
+    if (!isLoggedIn()) {
+      history.pushState({ path: '/' }, '', '/');
+      return await LoginPage();
+    }
+    return await SinglePage();
+  }
+
   // Find the matching route by path
   const currentRoute = Object.values(routes).find(
     (route) => route.url === currentPath

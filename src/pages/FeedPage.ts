@@ -156,7 +156,10 @@ function initializeFeedInteractions(): void {
     '.like-btn, .action-btn-compact.like-btn'
   );
   likeButtons.forEach((button) => {
-    button.addEventListener('click', handleLikeClick);
+    button.addEventListener('click', (event: Event) => {
+      event.stopPropagation(); // Prevent post card click
+      handleLikeClick(event);
+    });
   });
 
   // Handle comment buttons - toggle visibility
@@ -164,7 +167,10 @@ function initializeFeedInteractions(): void {
     '.comment-btn, .action-btn-compact.comment-btn'
   );
   commentButtons.forEach((button) => {
-    button.addEventListener('click', handleCommentToggle);
+    button.addEventListener('click', (event: Event) => {
+      event.stopPropagation(); // Prevent post card click
+      handleCommentToggle(event);
+    });
   });
 
   // Handle view buttons - show full post
@@ -172,13 +178,43 @@ function initializeFeedInteractions(): void {
     '.view-btn, .action-btn-compact.view-btn'
   );
   viewButtons.forEach((button) => {
-    button.addEventListener('click', handleViewPost);
+    button.addEventListener('click', (event: Event) => {
+      event.stopPropagation(); // Prevent post card click
+      handleViewPost(event);
+    });
+  });
+
+  // Handle clickable post cards - navigate to single post page
+  const postCards = document.querySelectorAll('.clickable-post');
+  postCards.forEach((card) => {
+    card.addEventListener('click', (event: Event) => {
+      // Prevent navigation if clicking on action buttons
+      const target = event.target as HTMLElement;
+      if (
+        target.closest(
+          '.action-btn, .action-btn-compact, .like-btn, .comment-btn, .share-btn, .view-btn'
+        )
+      ) {
+        return; // Let the button handle its own click
+      }
+
+      // Navigate to single post page
+      const postId = (card as HTMLElement).dataset.postId;
+      if (postId) {
+        const singlePostUrl = `/post/${postId}`;
+        history.pushState({ path: singlePostUrl }, '', singlePostUrl);
+        renderRoute(singlePostUrl);
+      }
+    });
   });
 
   // Handle comment form submissions
   const commentSubmitButtons = document.querySelectorAll('.comment-submit-btn');
   commentSubmitButtons.forEach((button) => {
-    button.addEventListener('click', handleCommentSubmit);
+    button.addEventListener('click', (event: Event) => {
+      event.stopPropagation(); // Prevent post card click
+      handleCommentSubmit(event);
+    });
   });
 
   // Handle comment input enter key
@@ -195,7 +231,7 @@ function initializeFeedInteractions(): void {
           `[data-post-id="${postId}"].comment-submit-btn`
         ) as HTMLElement;
         if (submitBtn) {
-          handleCommentSubmit({ currentTarget: submitBtn } as Event);
+          handleCommentSubmit({ currentTarget: submitBtn } as unknown as Event);
         }
       }
     });
@@ -204,7 +240,10 @@ function initializeFeedInteractions(): void {
   // Handle reaction buttons
   const reactionButtons = document.querySelectorAll('.reaction-btn');
   reactionButtons.forEach((button) => {
-    button.addEventListener('click', handleReactionClick);
+    button.addEventListener('click', (event: Event) => {
+      event.stopPropagation(); // Prevent post card click
+      handleReactionClick(event);
+    });
   });
 
   // Handle like button hover for reactions modal
@@ -302,9 +341,12 @@ function handleViewPost(event: Event): void {
   const button = event.currentTarget as HTMLElement;
   const postId = button.dataset.postId;
 
-  // Navigate to full post page or show modal
-  console.log('View full post:', postId);
-  // TODO: Implement navigation to post detail page
+  if (postId) {
+    // Navigate to single post page
+    const singlePostUrl = `/post/${postId}`;
+    history.pushState({ path: singlePostUrl }, '', singlePostUrl);
+    renderRoute(singlePostUrl);
+  }
 }
 
 /**

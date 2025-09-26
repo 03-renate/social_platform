@@ -33,7 +33,7 @@ export default function postCard(
     title && title.length > 40 ? title.substring(0, 40) + '...' : title;
 
   return `
-    <article class="post-card" data-post-id="${id}" style="animation-delay: ${animationDelay}s">
+    <article class="post-card clickable-post" data-post-id="${id}" style="animation-delay: ${animationDelay}s; cursor: pointer;" title="Click to view full post">
       <!-- Post Media (if exists) -->
       ${
         media?.url

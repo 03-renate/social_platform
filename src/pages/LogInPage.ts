@@ -103,7 +103,6 @@ export default async function LoginPage() {
         const loginData: LoginCredentials = { email, password };
 
         try {
-          console.log('Attempting login with:', { email });
           const result: ApiResponse<LoginResponse> = await loginUser(loginData);
 
           if (result.errors && result.errors.length > 0) {

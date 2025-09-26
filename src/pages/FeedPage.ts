@@ -16,7 +16,6 @@ import {
   getPostComments,
   createComment,
   toggleReaction,
-  type Comment,
 } from "../services/interactions/interactions";
 import { renderRoute } from "../router";
 import { isLoggedIn } from "../utils/auth";
@@ -715,7 +714,7 @@ async function submitComment(postId: number): Promise<void> {
     submitBtn.innerHTML =
       '<div style="width: 16px; height: 16px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
 
-    const response = await createComment(postId.toString(), commentText);
+    await createComment(postId.toString(), commentText);
 
     input.value = "";
 
@@ -746,19 +745,19 @@ async function submitComment(postId: number): Promise<void> {
   }
 }
 
-function replyToComment(postId: string, commentId: string): void {
-  const input = document.getElementById(
-    `comment-input-${postId}`
-  ) as HTMLInputElement;
-  const commentEl = document.querySelector(`[data-comment-id="${commentId}"]`);
-  const authorName = commentEl?.querySelector(".comment-author")?.textContent;
+// function replyToComment(postId: string, commentId: string): void {
+//   const input = document.getElementById(
+//     `comment-input-${postId}`
+//   ) as HTMLInputElement;
+//   const commentEl = document.querySelector(`[data-comment-id="${commentId}"]`);
+//   const authorName = commentEl?.querySelector(".comment-author")?.textContent;
 
-  if (input && authorName) {
-    input.value = `@${authorName} `;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-}
+//   if (input && authorName) {
+//     input.value = `@${authorName} `;
+//     input.focus();
+//     input.setSelectionRange(input.value.length, input.value.length);
+//   }
+// }
 
 /* -------------------------------------------------------------------------- */
 /*                          Reactions Functionality                           */

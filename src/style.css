@@ -64,6 +64,29 @@ body {
   padding-top: 70px;
 }
 
+/* Brand/Logo */
+.navbar-brand {
+  flex-shrink: 0;
+  padding-left: 1rem;
+}
+
+.brand-name {
+  font-size: 2rem;
+  font-weight: 700;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.brand-name:hover {
+  transform: scale(1.05);
+}
+
+
 /* 🔹 Navigation Bar */
 .navbar {
   background: var(--bg-card);
@@ -182,14 +205,7 @@ body {
   background: #2980b9;
 }
 
-.brand-name {
-  color: var(--primary-gradient);
-}
 
-h1.brand-name {
-  color: var(--primary-gradient);
-
-}
 
 /* Search Loading in Navbar */
 .search-loading {

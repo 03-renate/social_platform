@@ -58,10 +58,10 @@ export default function postCard(
         media?.url
           ? `
         <div class="post-media-preview">
-          <img src="${media.url}" alt="${media.alt || "Post image"}" class="post-image-preview">
+          <img src="${media.url}" alt="${media.alt || 'Post image'}" class="post-image-preview">
         </div>
       `
-          : ""
+          : ''
       }
 
       <header class="post-header-compact">
@@ -70,7 +70,7 @@ export default function postCard(
             <img src="${avatarUrl}" alt="${avatarAlt}" class="avatar-img-small">
           </div>
           <div class="author-details-compact">
-            <h4 class="author-name-compact">${author?.name || "Unknown"}</h4>
+            <h4 class="author-name-compact">${author?.name || 'Unknown'}</h4>
             <p class="post-time-compact">${timeAgo}</p>
           </div>
         </div>
@@ -106,12 +106,12 @@ export default function postCard(
           </div>
         </div>
         `
-            : ""
+            : ''
         }
       </header>
 
       <div class="post-content-compact">
-        ${truncatedTitle ? `<h3 class="post-title-compact">${truncatedTitle}</h3>` : ""}
+        ${truncatedTitle ? `<h3 class="post-title-compact">${truncatedTitle}</h3>` : ''}
         <div class="post-text-compact post-body">
           <p>${truncatedBody}</p>
         </div>
@@ -121,14 +121,14 @@ export default function postCard(
                 ${tags
                   .slice(0, 2)
                   .map((tag) => `<span class="tag-compact">#${tag}</span>`)
-                  .join("")}
+                  .join('')}
                 ${
                   tags.length > 2
                     ? `<span class="tag-more">+${tags.length - 2}</span>`
-                    : ""
+                    : ''
                 }
               </div>`
-            : ""
+            : ''
         }
       </div>
 
@@ -149,12 +149,12 @@ export default function postCard(
             <!-- Reactions Modal -->
             <div class="reactions-modal" id="reactions-${id}" style="display: none;">
               <div class="reactions-list">
-                ${["👍", "❤️", "😂", "😮", "😢", "😡"]
+                ${['👍', '❤️', '😂', '😮', '😢', '😡']
                   .map(
                     (emoji) =>
                       `<button class="reaction-btn" onclick="selectReaction(${id}, '${emoji}')">${emoji}</button>`
                   )
-                  .join("")}
+                  .join('')}
               </div>
             </div>
           </div>
@@ -172,33 +172,33 @@ export default function postCard(
       </footer>
 
       <!-- Comments Section -->
-      <div class="comments-section" id="comments-${id}" style="display: none;">
-        <div class="comments-header">
-          <h4>Comments</h4>
-          <button class="close-comments-btn" onclick="toggleComments(${id})">×</button>
-        </div>
-        <div class="comments-list" id="comments-list-${id}">
-          <!-- Comments will be loaded here -->
-        </div>
-        <div class="comment-form">
-          <div class="comment-input-container">
-            <input 
-              type="text" 
-              id="comment-input-${id}" 
-              class="comment-input" 
-              placeholder="Write a comment..." 
-              maxlength="280"
-              onkeypress="if(event.key === 'Enter') submitComment(${id})"
-            >
-            <button class="comment-submit-btn" onclick="submitComment(${id})">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
+<div class="comments-section" id="comments-${id}" style="display: none;">
+  <div class="comments-header">
+    <h4>Comments</h4>
+    <button class="close-comments-btn" onclick="toggleComments(${id})">×</button>
+  </div>
+  <div class="comments-list" id="comments-list-${id}">
+    <!-- Comments will be loaded here -->
+  </div>
+  <div class="comment-form">
+    <div class="comment-input-container">
+      <input 
+        type="text" 
+        id="comment-input-${id}" 
+        class="comment-input" 
+        placeholder="Write a comment..." 
+        maxlength="280"
+        onkeypress="if(event.key === 'Enter') submitComment(${id})"
+      >
+      <button class="comment-submit-btn" onclick="submitComment(${id})">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
     </article>
   `;
 }

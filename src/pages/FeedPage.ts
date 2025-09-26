@@ -3,7 +3,7 @@
  * @file Enhanced FeedPage.ts - COMPLETE VERSION
  */
 
-import postCard from "../components/postCard";
+import postCard from '../components/postCard';
 import {
   getAllPosts,
   getPublicPosts,
@@ -11,15 +11,15 @@ import {
   updatePost,
   deletePost,
   type NoroffPost,
-} from "../services/posts/posts";
+} from '../services/posts/posts';
 import {
-  getPostComments,
   createComment,
   toggleReaction,
-} from "../services/interactions/interactions";
-import { renderRoute } from "../router";
-import { isLoggedIn } from "../utils/auth";
-import { getLocalItem } from "../utils/storage";
+  deleteComment,
+} from '../services/interactions/interactions';
+import { renderRoute } from '../router';
+import { isLoggedIn } from '../utils/auth';
+import { getLocalItem } from '../utils/storage';
 
 export default async function FeedPage(): Promise<string> {
   try {
@@ -47,7 +47,7 @@ export default async function FeedPage(): Promise<string> {
       };
     } else {
       const urlParams = new URLSearchParams(window.location.search);
-      const currentPage = parseInt(urlParams.get("page") || "1", 10);
+      const currentPage = parseInt(urlParams.get('page') || '1', 10);
       const postsPerPage = 15;
 
       try {
@@ -58,7 +58,7 @@ export default async function FeedPage(): Promise<string> {
         }
         posts = postsResponse.data;
       } catch (error) {
-        console.log("Failed to load posts:", error);
+        console.log('Failed to load posts:', error);
         posts = [];
         postsResponse = {
           data: [],
@@ -83,18 +83,18 @@ export default async function FeedPage(): Promise<string> {
         <main class="feed-container">
           <!-- Feed Header -->
           <header class="feed-header">
-            <h1 class="feed-title">${isUserLoggedIn ? "Your Feed" : "Social Feed"}</h1>
+            <h1 class="feed-title">${isUserLoggedIn ? 'Your Feed' : 'Social Feed'}</h1>
             <p class="feed-subtitle">${
               isUserLoggedIn
                 ? `Discover what's happening in your network${
                     !isSearchMode
                       ? ` (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})`
-                      : ""
+                      : ''
                   }`
                 : `Explore public posts and discover interesting content${
                     !isSearchMode
                       ? ` (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})`
-                      : ""
+                      : ''
                   }`
             }</p>
           </header>
@@ -148,7 +148,7 @@ ${
   </form>
 </section>
 `
-    : ""
+    : ''
 }
 
           <!-- Posts Container -->
@@ -157,28 +157,28 @@ ${
               posts.length > 0
                 ? posts
                     .map((post, index) => postCard(post, index * 0.1))
-                    .join("")
+                    .join('')
                 : isSearchMode
                   ? renderEmptyState(
-                      "🔍",
-                      "No posts found",
-                      "Try searching with different keywords"
+                      '🔍',
+                      'No posts found',
+                      'Try searching with different keywords'
                     )
                   : renderEmptyState(
-                      "🔭",
-                      "No posts available",
+                      '🔭',
+                      'No posts available',
                       isUserLoggedIn
-                        ? "Start following people to see their posts!"
-                        : "No posts to display at the moment. Try refreshing the page.",
+                        ? 'Start following people to see their posts!'
+                        : 'No posts to display at the moment. Try refreshing the page.',
                       !isUserLoggedIn
                         ? `<button class="btn btn-primary" onclick="window.location.href='/'" style="margin-top: 1rem;">🔐 Sign In for More Content</button>`
-                        : ""
+                        : ''
                     )
             }
           </div>
 
           <!-- Pagination Controls (only show when not in search mode) -->
-          ${!isSearchMode ? renderPaginationControls(postsResponse.meta) : ""}
+          ${!isSearchMode ? renderPaginationControls(postsResponse.meta) : ''}
         </main>
       </div>
 
@@ -232,7 +232,7 @@ ${
       </div>
     `;
   } catch (error) {
-    console.error("Error loading feed:", error);
+    console.error('Error loading feed:', error);
     return renderErrorState();
   }
 }
@@ -245,7 +245,7 @@ function renderEmptyState(
   icon: string,
   title: string,
   message: string,
-  extra: string = ""
+  extra: string = ''
 ): string {
   return `
     <div style="text-align: center; padding: 3rem; color: var(--text-muted); background: var(--bg-card); border-radius: var(--border-radius-lg); border: 1px solid var(--border-color);">
@@ -279,51 +279,51 @@ function renderErrorState(): string {
 function initializeFeedInteractions(): void {
   // Handle create post form
   const createForm = document.getElementById(
-    "create-post-form"
+    'create-post-form'
   ) as HTMLFormElement | null;
   if (createForm) {
-    createForm.addEventListener("submit", handleCreatePost);
+    createForm.addEventListener('submit', handleCreatePost);
   }
 
   // Collapsible create post box
-  const postBox = document.getElementById("create-post-box");
-  const collapsedInput = document.getElementById("collapsed-input");
+  const postBox = document.getElementById('create-post-box');
+  const collapsedInput = document.getElementById('collapsed-input');
   const expandedFields = postBox?.querySelector(
-    ".expanded-fields"
+    '.expanded-fields'
   ) as HTMLElement;
-  const cancelBtn = document.getElementById("cancel-post-btn");
+  const cancelBtn = document.getElementById('cancel-post-btn');
 
   if (postBox && collapsedInput && expandedFields) {
-    collapsedInput.addEventListener("click", () => {
-      postBox.classList.remove("collapsed");
-      postBox.classList.add("expanded");
-      expandedFields.style.display = "block";
-      collapsedInput.style.display = "none";
+    collapsedInput.addEventListener('click', () => {
+      postBox.classList.remove('collapsed');
+      postBox.classList.add('expanded');
+      expandedFields.style.display = 'block';
+      collapsedInput.style.display = 'none';
     });
 
-    cancelBtn?.addEventListener("click", () => {
-      postBox.classList.remove("expanded");
-      postBox.classList.add("collapsed");
-      expandedFields.style.display = "none";
-      collapsedInput.style.display = "block";
+    cancelBtn?.addEventListener('click', () => {
+      postBox.classList.remove('expanded');
+      postBox.classList.add('collapsed');
+      expandedFields.style.display = 'none';
+      collapsedInput.style.display = 'block';
       createForm?.reset();
     });
   }
 
   // Handle edit post form
   const editForm = document.getElementById(
-    "editPostForm"
+    'editPostForm'
   ) as HTMLFormElement | null;
   if (editForm) {
-    editForm.addEventListener("submit", handleEditPost);
+    editForm.addEventListener('submit', handleEditPost);
   }
 
   // Enhanced: Close dropdowns when clicking outside
-  document.addEventListener("click", function (e) {
+  document.addEventListener('click', function (e) {
     const target = e.target as Element;
-    if (!target.closest(".dropdown")) {
-      document.querySelectorAll(".post-menu.show").forEach((menu) => {
-        menu.classList.remove("show");
+    if (!target.closest('.dropdown')) {
+      document.querySelectorAll('.post-menu.show').forEach((menu) => {
+        menu.classList.remove('show');
       });
     }
   });
@@ -334,6 +334,10 @@ function initializeFeedInteractions(): void {
   (window as any).deletePost = deletePostFunction;
   (window as any).toggleComments = toggleComments;
   (window as any).submitComment = submitComment;
+  (window as any).startReply = startReply;
+  (window as any).cancelReply = cancelReply;
+  (window as any).submitReply = submitReply;
+  (window as any).deleteCommentFunction = deleteCommentFunction;
   (window as any).toggleReaction = handleToggleReaction;
   (window as any).selectReaction = selectReaction;
   (window as any).viewFullPost = viewFullPost;
@@ -352,29 +356,29 @@ async function handleCreatePost(event: Event): Promise<void> {
 
   const form = event.target as HTMLFormElement;
   const title = (
-    document.getElementById("post-title") as HTMLInputElement
+    document.getElementById('post-title') as HTMLInputElement
   )?.value.trim();
   const body = (
-    document.getElementById("post-body") as HTMLTextAreaElement
+    document.getElementById('post-body') as HTMLTextAreaElement
   )?.value.trim();
   const rawTags = (
-    document.getElementById("post-tags") as HTMLInputElement
+    document.getElementById('post-tags') as HTMLInputElement
   )?.value.trim();
   const tags = rawTags
     ? rawTags
-        .split(",")
+        .split(',')
         .map((t) => t.trim())
         .filter((t) => t.length > 0)
     : [];
   const imageUrl = (
-    document.getElementById("post-image-url") as HTMLInputElement
+    document.getElementById('post-image-url') as HTMLInputElement
   )?.value.trim();
   const imageAlt = (
-    document.getElementById("post-image-alt") as HTMLInputElement
+    document.getElementById('post-image-alt') as HTMLInputElement
   )?.value.trim();
 
   if (!title || !body) {
-    alert("Title and Body are required.");
+    alert('Title and Body are required.');
     return;
   }
 
@@ -383,10 +387,10 @@ async function handleCreatePost(event: Event): Promise<void> {
       "button[type='submit']"
     ) as HTMLButtonElement;
     submitBtn.disabled = true;
-    submitBtn.textContent = "Posting...";
+    submitBtn.textContent = 'Posting...';
 
     const payload: any = { title, body, tags };
-    if (imageUrl) payload.media = { url: imageUrl, alt: imageAlt || "image" };
+    if (imageUrl) payload.media = { url: imageUrl, alt: imageAlt || 'image' };
 
     const created = await createPost(payload);
     const safePost: NoroffPost = {
@@ -397,9 +401,9 @@ async function handleCreatePost(event: Event): Promise<void> {
     };
 
     // Insert new post at top
-    const postsContainer = document.getElementById("posts-container");
+    const postsContainer = document.getElementById('posts-container');
     if (postsContainer) {
-      const wrapper = document.createElement("div");
+      const wrapper = document.createElement('div');
       wrapper.innerHTML = postCard(safePost, 0);
       const el = wrapper.firstElementChild;
       if (el) postsContainer.insertBefore(el, postsContainer.firstChild);
@@ -407,32 +411,32 @@ async function handleCreatePost(event: Event): Promise<void> {
 
     // Reset and collapse form
     form.reset();
-    const postBox = document.getElementById("create-post-box");
-    const collapsedInput = document.getElementById("collapsed-input");
+    const postBox = document.getElementById('create-post-box');
+    const collapsedInput = document.getElementById('collapsed-input');
     const expandedFields = postBox?.querySelector(
-      ".expanded-fields"
+      '.expanded-fields'
     ) as HTMLElement;
 
     if (postBox && collapsedInput && expandedFields) {
-      postBox.classList.remove("expanded");
-      postBox.classList.add("collapsed");
-      expandedFields.style.display = "none";
-      collapsedInput.style.display = "block";
+      postBox.classList.remove('expanded');
+      postBox.classList.add('collapsed');
+      expandedFields.style.display = 'none';
+      collapsedInput.style.display = 'block';
     }
 
     submitBtn.disabled = false;
-    submitBtn.textContent = "Post";
+    submitBtn.textContent = 'Post';
 
-    showNotification("✅ Post created successfully!", "success");
+    showNotification('✅ Post created successfully!', 'success');
   } catch (err: any) {
-    console.error("Error creating post:", err);
-    alert(err?.message || "Failed to create post. Please try again.");
+    console.error('Error creating post:', err);
+    alert(err?.message || 'Failed to create post. Please try again.');
     const submitBtn = form.querySelector(
       "button[type='submit']"
     ) as HTMLButtonElement;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Post";
+      submitBtn.textContent = 'Post';
     }
   }
 }
@@ -443,15 +447,15 @@ async function handleCreatePost(event: Event): Promise<void> {
 
 function togglePostMenu(postId: number): void {
   // Close all other menus first
-  document.querySelectorAll(".post-menu").forEach((menu) => {
+  document.querySelectorAll('.post-menu').forEach((menu) => {
     if (menu.id !== `postMenu${postId}`) {
-      menu.classList.remove("show");
+      menu.classList.remove('show');
     }
   });
 
   const menu = document.getElementById(`postMenu${postId}`);
   if (menu) {
-    menu.classList.toggle("show");
+    menu.classList.toggle('show');
   }
 }
 
@@ -460,34 +464,34 @@ function editPostFunction(postId: number): void {
   if (!postElement) return;
 
   const title =
-    postElement.querySelector(".post-title-compact")?.textContent || "";
-  const body = postElement.querySelector(".post-body")?.textContent || "";
-  const tags = Array.from(postElement.querySelectorAll(".tag-compact"))
-    .map((tag) => tag.textContent?.replace("#", "") || "")
+    postElement.querySelector('.post-title-compact')?.textContent || '';
+  const body = postElement.querySelector('.post-body')?.textContent || '';
+  const tags = Array.from(postElement.querySelectorAll('.tag-compact'))
+    .map((tag) => tag.textContent?.replace('#', '') || '')
     .filter((tag) => tag.length > 0);
 
   // Find media info if exists
   const mediaImg = postElement.querySelector(
-    ".post-image-preview"
+    '.post-image-preview'
   ) as HTMLImageElement;
-  const imageUrl = mediaImg?.src || "";
-  const imageAlt = mediaImg?.alt || "";
+  const imageUrl = mediaImg?.src || '';
+  const imageAlt = mediaImg?.alt || '';
 
   // Populate edit form
-  (document.getElementById("editPostTitle") as HTMLInputElement).value = title;
-  (document.getElementById("editPostBody") as HTMLTextAreaElement).value = body;
-  (document.getElementById("editPostTags") as HTMLInputElement).value =
-    tags.join(", ");
-  (document.getElementById("editPostImageUrl") as HTMLInputElement).value =
+  (document.getElementById('editPostTitle') as HTMLInputElement).value = title;
+  (document.getElementById('editPostBody') as HTMLTextAreaElement).value = body;
+  (document.getElementById('editPostTags') as HTMLInputElement).value =
+    tags.join(', ');
+  (document.getElementById('editPostImageUrl') as HTMLInputElement).value =
     imageUrl;
-  (document.getElementById("editPostImageAlt") as HTMLInputElement).value =
+  (document.getElementById('editPostImageAlt') as HTMLInputElement).value =
     imageAlt;
 
   // Store post ID for form submission
-  const editModal = document.getElementById("editPostModal");
+  const editModal = document.getElementById('editPostModal');
   if (editModal) {
     editModal.dataset.postId = postId.toString();
-    editModal.style.display = "flex";
+    editModal.style.display = 'flex';
   }
 
   // Close post menu
@@ -497,34 +501,34 @@ function editPostFunction(postId: number): void {
 async function handleEditPost(event: Event): Promise<void> {
   event.preventDefault();
 
-  const modal = document.getElementById("editPostModal");
+  const modal = document.getElementById('editPostModal');
   const postId = Number(modal?.dataset.postId);
   if (!postId) return;
 
   const title = (
-    document.getElementById("editPostTitle") as HTMLInputElement
+    document.getElementById('editPostTitle') as HTMLInputElement
   ).value.trim();
   const body = (
-    document.getElementById("editPostBody") as HTMLTextAreaElement
+    document.getElementById('editPostBody') as HTMLTextAreaElement
   ).value.trim();
   const rawTags = (
-    document.getElementById("editPostTags") as HTMLInputElement
+    document.getElementById('editPostTags') as HTMLInputElement
   ).value.trim();
   const tags = rawTags
     ? rawTags
-        .split(",")
+        .split(',')
         .map((t) => t.trim())
         .filter((t) => t.length > 0)
     : [];
   const imageUrl = (
-    document.getElementById("editPostImageUrl") as HTMLInputElement
+    document.getElementById('editPostImageUrl') as HTMLInputElement
   ).value.trim();
   const imageAlt = (
-    document.getElementById("editPostImageAlt") as HTMLInputElement
+    document.getElementById('editPostImageAlt') as HTMLInputElement
   ).value.trim();
 
   if (!title || !body) {
-    alert("Title and Body are required.");
+    alert('Title and Body are required.');
     return;
   }
 
@@ -533,10 +537,10 @@ async function handleEditPost(event: Event): Promise<void> {
       'button[type="submit"]'
     ) as HTMLButtonElement;
     submitBtn.disabled = true;
-    submitBtn.textContent = "Updating...";
+    submitBtn.textContent = 'Updating...';
 
     const payload: any = { title, body, tags };
-    if (imageUrl) payload.media = { url: imageUrl, alt: imageAlt || "image" };
+    if (imageUrl) payload.media = { url: imageUrl, alt: imageAlt || 'image' };
 
     const updated = await updatePost(postId, payload);
 
@@ -544,51 +548,51 @@ async function handleEditPost(event: Event): Promise<void> {
     const postElement = document.getElementById(`post-${postId}`);
     if (postElement) {
       // Update title and body
-      const titleEl = postElement.querySelector(".post-title-compact");
-      const bodyEl = postElement.querySelector(".post-body");
+      const titleEl = postElement.querySelector('.post-title-compact');
+      const bodyEl = postElement.querySelector('.post-body');
       if (titleEl) titleEl.textContent = updated.title;
       if (bodyEl) bodyEl.textContent = updated.body;
 
       // Update tags
-      const tagsContainer = postElement.querySelector(".post-tags-compact");
+      const tagsContainer = postElement.querySelector('.post-tags-compact');
       if (tagsContainer && updated.tags) {
         tagsContainer.innerHTML =
           updated.tags
             .slice(0, 2)
             .map((tag) => `<span class="tag-compact">#${tag}</span>`)
-            .join("") +
+            .join('') +
           (updated.tags.length > 2
             ? `<span class="tag-more">+${updated.tags.length - 2}</span>`
-            : "");
+            : '');
       }
 
       // Update media if changed
       if (updated.media?.url) {
-        let mediaContainer = postElement.querySelector(".post-media-preview");
+        let mediaContainer = postElement.querySelector('.post-media-preview');
         if (!mediaContainer) {
-          mediaContainer = document.createElement("div");
-          mediaContainer.className = "post-media-preview";
+          mediaContainer = document.createElement('div');
+          mediaContainer.className = 'post-media-preview';
           postElement.insertBefore(mediaContainer, postElement.firstChild);
         }
-        mediaContainer.innerHTML = `<img src="${updated.media.url}" alt="${updated.media.alt || "Post image"}" class="post-image-preview">`;
+        mediaContainer.innerHTML = `<img src="${updated.media.url}" alt="${updated.media.alt || 'Post image'}" class="post-image-preview">`;
       }
     }
 
     closeEditModal();
-    showNotification("✅ Post updated successfully!", "success");
+    showNotification('✅ Post updated successfully!', 'success');
 
     submitBtn.disabled = false;
-    submitBtn.textContent = "💾 Update Post";
+    submitBtn.textContent = '💾 Update Post';
   } catch (error) {
-    console.error("Error updating post:", error);
-    alert("Failed to update post. Please try again.");
+    console.error('Error updating post:', error);
+    alert('Failed to update post. Please try again.');
 
     const submitBtn = modal?.querySelector(
       'button[type="submit"]'
     ) as HTMLButtonElement;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "💾 Update Post";
+      submitBtn.textContent = '💾 Update Post';
     }
   }
 }
@@ -596,7 +600,7 @@ async function handleEditPost(event: Event): Promise<void> {
 async function deletePostFunction(postId: number): Promise<void> {
   if (
     !confirm(
-      "Are you sure you want to delete this post? This action cannot be undone."
+      'Are you sure you want to delete this post? This action cannot be undone.'
     )
   ) {
     togglePostMenu(postId);
@@ -607,27 +611,31 @@ async function deletePostFunction(postId: number): Promise<void> {
     await deletePost(postId);
     const postElement = document.getElementById(`post-${postId}`);
     if (postElement) {
-      postElement.style.opacity = "0";
-      postElement.style.transform = "translateY(-20px)";
+      postElement.style.opacity = '0';
+      postElement.style.transform = 'translateY(-20px)';
       setTimeout(() => postElement.remove(), 300);
     }
 
-    showNotification("✅ Post deleted successfully!", "success");
+    showNotification('✅ Post deleted successfully!', 'success');
   } catch (error) {
-    console.error("Error deleting post:", error);
-    alert("Failed to delete post. Please try again.");
+    console.error('Error deleting post:', error);
+    alert('Failed to delete post. Please try again.');
   }
 
   togglePostMenu(postId);
 }
 
 function closeEditModal(): void {
-  const modal = document.getElementById("editPostModal");
+  const modal = document.getElementById('editPostModal');
   if (modal) {
-    modal.style.display = "none";
+    modal.style.display = 'none';
     delete modal.dataset.postId;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                           Comments Functionality                           */
+/* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
 /*                           Comments Functionality                           */
@@ -637,12 +645,13 @@ async function toggleComments(postId: number): Promise<void> {
   const commentsSection = document.getElementById(`comments-${postId}`);
   if (!commentsSection) return;
 
-  const isVisible = commentsSection.style.display !== "none";
+  const isVisible = commentsSection.style.display !== 'none';
 
   if (isVisible) {
-    commentsSection.style.display = "none";
+    commentsSection.style.display = 'none';
   } else {
-    commentsSection.style.display = "block";
+    commentsSection.style.display = 'block';
+    // Always load comments when opening
     await loadComments(postId);
   }
 }
@@ -651,47 +660,68 @@ async function loadComments(postId: number): Promise<void> {
   const commentsList = document.getElementById(`comments-list-${postId}`);
   if (!commentsList) return;
 
+
   commentsList.innerHTML =
-    '<div class="loading-comments">Loading comments...</div>';
+    '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+}
 
-  try {
-    const response = await getPostComments(postId.toString());
-    const comments = response.data;
+function renderCommentHTML(
+  comment: any,
+  postId: number,
+  index: number
+): string {
+  const timeAgo = getTimeAgo(new Date(comment.created));
+  const currentUserName = getLocalItem('user');
+  const isOwner = currentUserName && comment.author.name === currentUserName;
 
-    if (comments.length === 0) {
-      commentsList.innerHTML =
-        '<div class="no-comments">No comments yet. Be the first to comment!</div>';
-      return;
-    }
-
-    commentsList.innerHTML = comments
-      .map(
-        (comment) => `
-      <div class="comment-item" data-comment-id="${comment.id}">
-        <div class="comment-avatar">
+  return `
+    <div class="comment-item" data-comment-id="${comment.id}" style="animation-delay: ${index * 0.1}s">
+      <div class="comment-avatar">
+        ${
+          comment.author.avatar?.url
+            ? `<img src="${comment.author.avatar.url}" alt="${comment.author.avatar.alt || comment.author.name}" class="comment-avatar-img">`
+            : `<div class="comment-avatar-placeholder">${comment.author.name.charAt(0).toUpperCase()}</div>`
+        }
+      </div>
+      <div class="comment-content">
+        <div class="comment-header">
+          <span class="comment-author">${comment.author.name}</span>
+          <span class="comment-time">${timeAgo}</span>
+        </div>
+        <div class="comment-text">${comment.body}</div>
+        <div class="comment-actions">
+          <button class="comment-action-btn reply-btn" onclick="startReply(${postId}, ${comment.id}, '${comment.author.name}')">
+            💬 Reply
+          </button>
           ${
-            comment.author.avatar?.url
-              ? `<img src="${comment.author.avatar.url}" alt="${comment.author.avatar.alt || comment.author.name}">`
-              : comment.author.name.charAt(0).toUpperCase()
+            isOwner
+              ? `
+            <button class="comment-action-btn delete-btn" onclick="deleteCommentFunction(${postId}, ${comment.id})">
+              🗑️ Delete
+            </button>
+          `
+              : ''
           }
         </div>
-        <div class="comment-content">
-          <div class="comment-author">${comment.author.name}</div>
-          <div class="comment-text">${comment.body}</div>
-          <div class="comment-meta">
-            <span class="comment-time">${getTimeAgo(new Date(comment.created))}</span>
-            <button class="comment-reply-btn" onclick="replyToComment('${postId}', '${comment.id}')">Reply</button>
+        
+        <!-- Reply form (hidden by default) -->
+        <div class="reply-form" id="reply-form-${comment.id}" style="display: none;">
+          <div class="reply-input-container">
+            <input 
+              type="text" 
+              id="reply-input-${comment.id}" 
+              class="reply-input" 
+              placeholder="Write a reply..."
+              maxlength="280"
+              onkeypress="if(event.key === 'Enter') submitReply(${postId}, ${comment.id})"
+            >
+            <button class="reply-submit-btn" onclick="submitReply(${postId}, ${comment.id})">Send</button>
+            <button class="reply-cancel-btn" onclick="cancelReply(${comment.id})">Cancel</button>
           </div>
         </div>
       </div>
-    `
-      )
-      .join("");
-  } catch (error) {
-    console.error("Error loading comments:", error);
-    commentsList.innerHTML =
-      '<div class="comments-error">Failed to load comments. Please try again.</div>';
-  }
+    </div>
+  `;
 }
 
 async function submitComment(postId: number): Promise<void> {
@@ -701,7 +731,12 @@ async function submitComment(postId: number): Promise<void> {
   const commentText = input?.value.trim();
 
   if (!commentText) {
-    input.focus();
+    input?.focus();
+    return;
+  }
+
+  if (commentText.length > 280) {
+    alert('Comment is too long. Maximum 280 characters allowed.');
     return;
   }
 
@@ -710,54 +745,284 @@ async function submitComment(postId: number): Promise<void> {
   ) as HTMLButtonElement;
 
   try {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML =
-      '<div style="width: 16px; height: 16px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
+    // Disable button and show loading
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="loading-spinner-small"></div>';
+    }
 
-    await createComment(postId.toString(), commentText);
+    // Create the comment using the correct API
+    const response = await createComment(postId.toString(), commentText);
 
-    input.value = "";
+    console.log('Comment created successfully:', response);
 
-    // Refresh comments
-    await loadComments(postId);
+    // Clear input
+    input.value = '';
+
+    // Since we can't fetch comments, we'll add the comment to the UI manually
+    addCommentToUI(postId, {
+      id: response.data.id,
+      body: commentText,
+      author: {
+        name: getLocalItem('user') || 'You',
+        email: '',
+        avatar: null,
+      },
+      created: new Date().toISOString(),
+      postId: postId.toString(),
+      replyToId: null,
+      owner: getLocalItem('user') || '',
+      updated: new Date().toISOString(),
+    });
 
     // Update comment count in post card
     const commentCountEl = document.querySelector(
       `[data-post-id="${postId}"].comment-btn .action-count-compact`
     );
     if (commentCountEl) {
-      const currentCount = parseInt(commentCountEl.textContent || "0");
+      const currentCount = parseInt(commentCountEl.textContent || '0');
       commentCountEl.textContent = (currentCount + 1).toString();
     }
 
-    showNotification("✅ Comment added!", "success");
-  } catch (error) {
-    console.error("Error creating comment:", error);
-    alert("Failed to post comment. Please try again.");
+    showNotification('Comment added!', 'success');
+  } catch (error: any) {
+    console.error('Error creating comment:', error);
+
+    // Show specific error messages
+    if (error.message?.includes('unauthorized')) {
+      alert('Please log in to comment on posts.');
+    } else if (error.message?.includes('not found')) {
+      alert('Post not found. Please refresh the page.');
+    } else {
+      alert('Failed to post comment. Please try again.');
+    }
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="22" y1="2" x2="11" y2="13"></line>
-        <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-      </svg>
-    `;
+    // Re-enable button
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+        </svg>
+      `;
+    }
   }
 }
 
-// function replyToComment(postId: string, commentId: string): void {
-//   const input = document.getElementById(
-//     `comment-input-${postId}`
-//   ) as HTMLInputElement;
-//   const commentEl = document.querySelector(`[data-comment-id="${commentId}"]`);
-//   const authorName = commentEl?.querySelector(".comment-author")?.textContent;
+function addCommentToUI(postId: number, comment: any): void {
+  const commentsList = document.getElementById(`comments-list-${postId}`);
+  if (!commentsList) return;
 
-//   if (input && authorName) {
-//     input.value = `@${authorName} `;
-//     input.focus();
-//     input.setSelectionRange(input.value.length, input.value.length);
-//   }
-// }
+  // Remove "no comments" message if it exists
+  const noCommentsMsg = commentsList.querySelector('.no-comments');
+  if (noCommentsMsg) {
+    noCommentsMsg.remove();
+  }
+
+  // Create comment HTML
+  const timeAgo = 'now';
+  const currentUserName = getLocalItem('user');
+  const isOwner = currentUserName && comment.author.name === currentUserName;
+
+  const commentHTML = `
+    <div class="comment-item" data-comment-id="${comment.id}" style="animation-delay: 0s">
+      <div class="comment-avatar">
+        <div class="comment-avatar-placeholder">${comment.author.name.charAt(0).toUpperCase()}</div>
+      </div>
+      <div class="comment-content">
+        <div class="comment-header">
+          <span class="comment-author">${comment.author.name}</span>
+          <span class="comment-time">${timeAgo}</span>
+        </div>
+        <div class="comment-text">${comment.body}</div>
+        <div class="comment-actions">
+          <button class="comment-action-btn reply-btn" onclick="startReply(${postId}, ${comment.id}, '${comment.author.name}')">
+            Reply
+          </button>
+          ${
+            isOwner
+              ? `
+            <button class="comment-action-btn delete-btn" onclick="deleteCommentFunction(${postId}, ${comment.id})">
+              Delete
+            </button>
+          `
+              : ''
+          }
+        </div>
+        
+        <!-- Reply form (hidden by default) -->
+        <div class="reply-form" id="reply-form-${comment.id}" style="display: none;">
+          <div class="reply-input-container">
+            <input 
+              type="text" 
+              id="reply-input-${comment.id}" 
+              class="reply-input" 
+              placeholder="Write a reply..."
+              maxlength="280"
+              onkeypress="if(event.key === 'Enter') submitReply(${postId}, ${comment.id})"
+            >
+            <button class="reply-submit-btn" onclick="submitReply(${postId}, ${comment.id})">Send</button>
+            <button class="reply-cancel-btn" onclick="cancelReply(${comment.id})">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add the comment to the list
+  commentsList.insertAdjacentHTML('beforeend', commentHTML);
+}
+
+
+/* -------------------------------------------------------------------------- */
+/*                            Reply Functionality                             */
+/* -------------------------------------------------------------------------- */
+
+function startReply(
+  postId: number,
+  commentId: number,
+  authorName: string
+): void {
+  // Hide all other reply forms
+  document.querySelectorAll('.reply-form').forEach((form) => {
+    (form as HTMLElement).style.display = 'none';
+  });
+
+  // Show this reply form
+  const replyForm = document.getElementById(`reply-form-${commentId}`);
+  const replyInput = document.getElementById(
+    `reply-input-${commentId}`
+  ) as HTMLInputElement;
+
+  if (replyForm && replyInput) {
+    replyForm.style.display = 'block';
+    replyInput.value = `@${authorName} `;
+    replyInput.focus();
+    // Set cursor at end
+    replyInput.setSelectionRange(
+      replyInput.value.length,
+      replyInput.value.length
+    );
+  }
+}
+
+function cancelReply(commentId: number): void {
+  const replyForm = document.getElementById(`reply-form-${commentId}`);
+  const replyInput = document.getElementById(
+    `reply-input-${commentId}`
+  ) as HTMLInputElement;
+
+  if (replyForm && replyInput) {
+    replyForm.style.display = 'none';
+    replyInput.value = '';
+  }
+}
+
+async function submitReply(
+  postId: number,
+  parentCommentId: number
+): Promise<void> {
+  const replyInput = document.getElementById(
+    `reply-input-${parentCommentId}`
+  ) as HTMLInputElement;
+  const replyText = replyInput?.value.trim();
+
+  if (!replyText) {
+    replyInput?.focus();
+    return;
+  }
+
+  if (replyText.length > 280) {
+    alert('Reply is too long. Maximum 280 characters allowed.');
+    return;
+  }
+
+  try {
+    // Create reply using the createComment function with replyToId
+    const response = await createComment(
+      postId.toString(),
+      replyText,
+      parentCommentId.toString()
+    );
+
+    // Clear and hide reply form
+    replyInput.value = '';
+    cancelReply(parentCommentId);
+
+    // Add the reply to the UI
+    addCommentToUI(postId, {
+      id: response.data.id,
+      body: replyText,
+      author: {
+        name: getLocalItem('user') || 'You',
+        email: '',
+        avatar: null,
+      },
+      created: new Date().toISOString(),
+      postId: postId.toString(),
+      replyToId: parentCommentId.toString(),
+      owner: getLocalItem('user') || '',
+      updated: new Date().toISOString(),
+    });
+
+    // Update comment count
+    const commentCountEl = document.querySelector(
+      `[data-post-id="${postId}"].comment-btn .action-count-compact`
+    );
+    if (commentCountEl) {
+      const currentCount = parseInt(commentCountEl.textContent || '0');
+      commentCountEl.textContent = (currentCount + 1).toString();
+    }
+
+    showNotification('Reply added!', 'success');
+  } catch (error: any) {
+    console.error('Error creating reply:', error);
+    alert('Failed to post reply. Please try again.');
+  }
+}
+
+
+/* -------------------------------------------------------------------------- */
+/*                           Delete Comment                                   */
+/* -------------------------------------------------------------------------- */
+
+async function deleteCommentFunction(
+  postId: number,
+  commentId: number
+): Promise<void> {
+  if (!confirm('Are you sure you want to delete this comment?')) {
+    return;
+  }
+
+  try {
+    await deleteComment(postId.toString(), commentId.toString());
+
+    // Remove comment from UI with proper typing
+    const commentElement = document.querySelector(
+      `[data-comment-id="${commentId}"]`
+    ) as HTMLElement;
+    if (commentElement) {
+      commentElement.style.opacity = '0';
+      commentElement.style.transform = 'translateX(-20px)';
+      setTimeout(() => commentElement.remove(), 300);
+    }
+
+    // Update comment count
+    const commentCountEl = document.querySelector(
+      `[data-post-id="${postId}"].comment-btn .action-count-compact`
+    );
+    if (commentCountEl) {
+      const currentCount = parseInt(commentCountEl.textContent || '0');
+      commentCountEl.textContent = Math.max(0, currentCount - 1).toString();
+    }
+
+    showNotification('Comment deleted!', 'success');
+  } catch (error: any) {
+    console.error('Error deleting comment:', error);
+    alert('Failed to delete comment. Please try again.');
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 /*                          Reactions Functionality                           */
@@ -768,7 +1033,7 @@ async function handleToggleReaction(
   emoji: string
 ): Promise<void> {
   if (!isLoggedIn()) {
-    alert("Please log in to react to posts.");
+    alert('Please log in to react to posts.');
     return;
   }
 
@@ -779,7 +1044,7 @@ async function handleToggleReaction(
       `[data-post-id="${postId}"].like-btn .action-count-compact`
     );
     if (reactionCount) {
-      const currentCount = parseInt(reactionCount.textContent || "0");
+      const currentCount = parseInt(reactionCount.textContent || '0');
       reactionCount.textContent = wasAdded
         ? (currentCount + 1).toString()
         : Math.max(0, currentCount - 1).toString();
@@ -790,14 +1055,14 @@ async function handleToggleReaction(
     );
     if (likeBtn) {
       if (wasAdded) {
-        likeBtn.classList.add("reacted");
+        likeBtn.classList.add('reacted');
       } else {
-        likeBtn.classList.remove("reacted");
+        likeBtn.classList.remove('reacted');
       }
     }
   } catch (error) {
-    console.error("Error toggling reaction:", error);
-    alert("Failed to react to post. Please try again.");
+    console.error('Error toggling reaction:', error);
+    alert('Failed to react to post. Please try again.');
   }
 }
 
@@ -807,7 +1072,7 @@ function selectReaction(postId: number, emoji: string): void {
   // Hide reactions modal
   const reactionsModal = document.getElementById(`reactions-${postId}`);
   if (reactionsModal) {
-    reactionsModal.style.display = "none";
+    reactionsModal.style.display = 'none';
   }
 }
 
@@ -817,7 +1082,7 @@ function selectReaction(postId: number, emoji: string): void {
 function showReactionsModal(postId: number): void {
   const modal = document.getElementById(`reactions-${postId}`);
   if (modal) {
-    modal.style.display = "block";
+    modal.style.display = 'block';
   }
 }
 
@@ -827,8 +1092,8 @@ function showReactionsModal(postId: number): void {
 function hideReactionsModal(postId: number): void {
   setTimeout(() => {
     const modal = document.getElementById(`reactions-${postId}`);
-    if (modal && !modal.matches(":hover")) {
-      modal.style.display = "none";
+    if (modal && !modal.matches(':hover')) {
+      modal.style.display = 'none';
     }
   }, 200);
 }
@@ -842,17 +1107,17 @@ function viewFullPost(postId: number): void {
   if (!postElement) return;
 
   const title =
-    postElement.querySelector(".post-title-compact")?.textContent || "";
-  const body = postElement.querySelector(".post-body")?.textContent || "";
+    postElement.querySelector('.post-title-compact')?.textContent || '';
+  const body = postElement.querySelector('.post-body')?.textContent || '';
   const author =
-    postElement.querySelector(".author-name-compact")?.textContent || "";
+    postElement.querySelector('.author-name-compact')?.textContent || '';
   const time =
-    postElement.querySelector(".post-time-compact")?.textContent || "";
+    postElement.querySelector('.post-time-compact')?.textContent || '';
   const mediaImg = postElement.querySelector(
-    ".post-image-preview"
+    '.post-image-preview'
   ) as HTMLImageElement;
 
-  const fullPostContent = document.getElementById("fullPostContent");
+  const fullPostContent = document.getElementById('fullPostContent');
   if (!fullPostContent) return;
 
   fullPostContent.innerHTML = `
@@ -876,11 +1141,11 @@ function viewFullPost(postId: number): void {
           <img src="${mediaImg.src}" alt="${mediaImg.alt}" style="width: 100%; border-radius: 8px; margin: 1rem 0;">
         </div>
       `
-          : ""
+          : ''
       }
       
       <div class="full-post-content">
-        ${title ? `<h2>${title}</h2>` : ""}
+        ${title ? `<h2>${title}</h2>` : ''}
         <div class="post-text">${body}</div>
       </div>
       
@@ -892,16 +1157,16 @@ function viewFullPost(postId: number): void {
     </div>
   `;
 
-  const modal = document.getElementById("fullPostModal");
+  const modal = document.getElementById('fullPostModal');
   if (modal) {
-    modal.style.display = "flex";
+    modal.style.display = 'flex';
   }
 }
 
 function closeFullPostModal(): void {
-  const modal = document.getElementById("fullPostModal");
+  const modal = document.getElementById('fullPostModal');
   if (modal) {
-    modal.style.display = "none";
+    modal.style.display = 'none';
   }
 }
 
@@ -911,9 +1176,9 @@ function closeFullPostModal(): void {
 
 function showNotification(
   message: string,
-  type: "success" | "error" | "info" = "info"
+  type: 'success' | 'error' | 'info' = 'info'
 ): void {
-  const notification = document.createElement("div");
+  const notification = document.createElement('div');
   notification.className = `notification ${type}-notification`;
   notification.innerHTML = `
     <div class="notification-content">
@@ -930,15 +1195,15 @@ function showNotification(
     color: white;
     font-weight: 500;
     animation: slideInFromRight 0.3s ease-out;
-    ${type === "success" ? "background: var(--success-color);" : ""}
-    ${type === "error" ? "background: var(--danger-color);" : ""}
-    ${type === "info" ? "background: var(--primary-color);" : ""}
+    ${type === 'success' ? 'background: var(--success-color);' : ''}
+    ${type === 'error' ? 'background: var(--danger-color);' : ''}
+    ${type === 'info' ? 'background: var(--primary-color);' : ''}
   `;
 
   document.body.appendChild(notification);
 
   setTimeout(() => {
-    notification.style.animation = "slideOutToRight 0.3s ease-out forwards";
+    notification.style.animation = 'slideOutToRight 0.3s ease-out forwards';
     setTimeout(() => {
       if (notification.parentNode) {
         notification.parentNode.removeChild(notification);
@@ -955,7 +1220,7 @@ function getTimeAgo(date: Date): string {
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 60) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
   if (diffInHours < 24) return `${diffInHours}h ago`;
   if (diffInDays < 7) return `${diffInDays}d ago`;
@@ -963,7 +1228,7 @@ function getTimeAgo(date: Date): string {
 }
 
 function renderPaginationControls(meta: any): string {
-  if (!meta || meta.pageCount <= 1) return "";
+  if (!meta || meta.pageCount <= 1) return '';
 
   const currentPage = meta.currentPage;
   const totalPages = meta.pageCount;
@@ -983,9 +1248,9 @@ function renderPaginationControls(meta: any): string {
             ? `<button class="pagination-btn pagination-prev" onclick="navigateToPage(${currentPage - 1})">Previous</button>`
             : `<button class="pagination-btn pagination-prev disabled" disabled>Previous</button>`
         }
-        ${currentPage !== 1 ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(1)">1</button>` : ""}
+        ${currentPage !== 1 ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(1)">1</button>` : ''}
         <button class="pagination-btn pagination-number active" disabled>${currentPage}</button>
-        ${currentPage !== totalPages ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(${totalPages})">${totalPages}</button>` : ""}
+        ${currentPage !== totalPages ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(${totalPages})">${totalPages}</button>` : ''}
         ${
           hasNext
             ? `<button class="pagination-btn pagination-next" onclick="navigateToPage(${currentPage + 1})">Next</button>`
@@ -1005,33 +1270,33 @@ function renderPaginationControls(meta: any): string {
  */
 function debugPostInteractions(): void {
   const requiredFunctions = [
-    "togglePostMenu",
-    "editPost",
-    "deletePost",
-    "toggleComments",
-    "submitComment",
-    "toggleReaction",
-    "selectReaction",
-    "viewFullPost",
-    "showReactionsModal",
-    "hideReactionsModal",
+    'togglePostMenu',
+    'editPost',
+    'deletePost',
+    'toggleComments',
+    'submitComment',
+    'toggleReaction',
+    'selectReaction',
+    'viewFullPost',
+    'showReactionsModal',
+    'hideReactionsModal',
   ];
 
-  console.log("🔍 Checking post interaction functions:");
+  console.log('🔍 Checking post interaction functions:');
   requiredFunctions.forEach((funcName) => {
-    const exists = typeof (window as any)[funcName] === "function";
+    const exists = typeof (window as any)[funcName] === 'function';
     console.log(
-      `${exists ? "✅" : "❌"} ${funcName}: ${exists ? "Available" : "Missing"}`
+      `${exists ? '✅' : '❌'} ${funcName}: ${exists ? 'Available' : 'Missing'}`
     );
   });
 
   // Check if posts exist in DOM
-  const postCards = document.querySelectorAll("[data-post-id]");
+  const postCards = document.querySelectorAll('[data-post-id]');
   console.log(`📝 Found ${postCards.length} post cards in DOM`);
 
   // Check if user is logged in
-  const currentUser = getLocalItem("user");
-  console.log(`👤 Current user: ${currentUser || "Not logged in"}`);
+  const currentUser = getLocalItem('user');
+  console.log(`👤 Current user: ${currentUser || 'Not logged in'}`);
 }
 
 // Make debug function available globally
@@ -1040,10 +1305,10 @@ function debugPostInteractions(): void {
 // Global navigation functions
 (window as any).navigateToPage = function (page: number) {
   const url = new URL(window.location.href);
-  url.searchParams.set("page", page.toString());
+  url.searchParams.set('page', page.toString());
   history.pushState(
     { path: url.pathname + url.search },
-    "",
+    '',
     url.pathname + url.search
   );
   renderRoute(window.location.pathname);
@@ -1053,8 +1318,8 @@ function debugPostInteractions(): void {
   (window as any).searchQuery = null;
   (window as any).searchResults = null;
   const searchInput = document.getElementById(
-    "navbar-search"
+    'navbar-search'
   ) as HTMLInputElement;
-  if (searchInput) searchInput.value = "";
-  renderRoute("/");
+  if (searchInput) searchInput.value = '';
+  renderRoute('/');
 };

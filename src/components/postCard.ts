@@ -66,13 +66,21 @@ export default function postCard(
 
       <header class="post-header-compact">
         <div class="author-info-compact">
-          <div class="author-avatar-small">
-            <img src="${avatarUrl}" alt="${avatarAlt}" class="avatar-img-small">
-          </div>
+          <div class="author-avatar-small" 
+                 onclick="navigateToProfile('${author?.name || 'Unknown'}')" 
+                 style="cursor: pointer;">
+                <img src="${avatarUrl}" alt="${avatarAlt}" class="avatar-img-small">
+            </div>
           <div class="author-details-compact">
-            <h4 class="author-name-compact">${author?.name || 'Unknown'}</h4>
-            <p class="post-time-compact">${timeAgo}</p>
-          </div>
+              <h4 class="author-name-compact">
+                <a href="/profile?user=${author?.name || 'Unknown'}" 
+                  class="author-link" 
+                  onclick="event.preventDefault(); navigateToProfile('${author?.name || 'Unknown'}')">
+                  ${author?.name || 'Unknown'}
+                 </a>
+              </h4>
+              <p class="post-time-compact">${timeAgo}</p>
+             </div>
         </div>
         
         ${

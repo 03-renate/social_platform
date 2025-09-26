@@ -17,17 +17,26 @@ import {
   toggleReaction,
   deleteComment,
 } from '../services/interactions/interactions';
-import { renderRoute } from '../router';
 import { isLoggedIn } from '../utils/auth';
 import { getLocalItem } from '../utils/storage';
+
+// Add missing import for navigation function
+declare global {
+  interface Window {
+    searchQuery?: string;
+    searchResults?: NoroffPost[];
+    navigateToProfile?: (username: string) => void;
+    navigateToPage?: (page: number) => void;
+  }
+}
 
 export default async function FeedPage(): Promise<string> {
   try {
     const isUserLoggedIn = isLoggedIn();
 
     // Check for search results from navbar
-    const searchQuery = (window as any).searchQuery;
-    const searchResults = (window as any).searchResults as NoroffPost[];
+    const searchQuery = window.searchQuery;
+    const searchResults = window.searchResults as NoroffPost[];
     const isSearchMode = Boolean(searchQuery && searchResults);
 
     let posts: NoroffPost[] = [];
@@ -103,50 +112,50 @@ export default async function FeedPage(): Promise<string> {
 ${
   isUserLoggedIn
     ? `
-<section class="create-post-box collapsed" id="create-post-box">
-  <form id="create-post-form" class="create-post-form">
+        <section class="create-post-box collapsed" id="create-post-box">
+           <form id="create-post-form" class="create-post-form">
     
-    <!-- Collapsed View -->
-    <div class="collapsed-view">
-      <input 
-        type="text" 
-        id="collapsed-input" 
-        placeholder="What's on your mind?" 
-        readonly 
-      />
-    </div>
+               <!-- Collapsed View -->
+               <div class="collapsed-view">
+                  <input 
+                  type="text" 
+                  id="collapsed-input" 
+                  placeholder="What's on your mind?" 
+                  readonly 
+                   />
+               </div>
 
-    <!-- Expanded View (hidden until clicked) -->
-    <div class="expanded-fields" style="display: none;">
-      <h2>Create a Post</h2>
-      <div class="form-group">
-        <label for="post-title">Title</label>
-        <input type="text" id="post-title" name="title" placeholder="Enter a title" required />
-      </div>
-      <div class="form-group">
-        <label for="post-body">Body</label>
-        <textarea id="post-body" name="body" rows="3" placeholder="What's on your mind?" required></textarea>
-      </div>
-      <div class="form-group">
-        <label for="post-tags">Tags (comma separated)</label>
-        <input type="text" id="post-tags" name="tags" placeholder="e.g. nature, coding, life" />
-      </div>
-      <div class="form-group">
-        <label for="post-image-url">Image URL</label>
-        <input type="url" id="post-image-url" name="imageUrl" placeholder="https://example.com/image.jpg" />
-      </div>
-      <div class="form-group">
-        <label for="post-image-alt">Image Alt Text</label>
-        <input type="text" id="post-image-alt" name="imageAlt" placeholder="Describe the image" />
-      </div>
+                <!-- Expanded View (hidden until clicked) -->
+               <div class="expanded-fields" style="display: none;">
+                  <h2>Create a Post</h2>
+                     <div class="form-group">
+                        <label for="post-title">Title</label>
+                        <input type="text" id="post-title" name="title" placeholder="Enter a title" required />
+                     </div>
+                     <div class="form-group">
+                         <label for="post-body">Body</label>
+                         <textarea id="post-body" name="body" rows="3" placeholder="What's on your mind?" required></textarea>
+                     </div>
+                     <div class="form-group">
+                         <label for="post-tags">Tags (comma separated)</label>
+                         <input type="text" id="post-tags" name="tags" placeholder="e.g. nature, coding, life" />
+                     </div>
+                     <div class="form-group">
+                         <label for="post-image-url">Image URL</label>
+                         <input type="url" id="post-image-url" name="imageUrl" placeholder="https://example.com/image.jpg" />
+                     </div>
+                     <div class="form-group">
+                         <label for="post-image-alt">Image Alt Text</label>
+                         <input type="text" id="post-image-alt" name="imageAlt" placeholder="Describe the image" />
+                     </div>
 
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Post</button>
-        <button type="button" id="cancel-post-btn" class="btn btn-secondary">Cancel</button>
-      </div>
-    </div>
-  </form>
-</section>
+                     <div class="form-actions">
+                         <button type="submit" class="btn btn-primary">Post</button>
+                         <button type="button" id="cancel-post-btn" class="btn btn-secondary">Cancel</button>
+                     </div>
+                  </div>
+             </form>
+         </section>
 `
     : ''
 }
@@ -272,6 +281,40 @@ function renderErrorState(): string {
   `;
 }
 
+function renderPaginationControls(meta: any): string {
+  if (!meta || meta.pageCount <= 1) return '';
+
+  const currentPage = meta.currentPage;
+  const totalPages = meta.pageCount;
+  const hasPrev = !meta.isFirstPage;
+  const hasNext = !meta.isLastPage;
+
+  return `
+    <div class="pagination-container">
+      <div class="pagination-info">
+        <span class="pagination-text">
+          Page ${currentPage} of ${totalPages} (${meta.totalCount} total posts)
+        </span>
+      </div>
+      <div class="pagination-controls">
+        ${
+          hasPrev
+            ? `<button class="pagination-btn pagination-prev" onclick="navigateToPage(${currentPage - 1})">Previous</button>`
+            : `<button class="pagination-btn pagination-prev disabled" disabled>Previous</button>`
+        }
+        ${currentPage !== 1 ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(1)">1</button>` : ''}
+        <button class="pagination-btn pagination-number active" disabled>${currentPage}</button>
+        ${currentPage !== totalPages ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(${totalPages})">${totalPages}</button>` : ''}
+        ${
+          hasNext
+            ? `<button class="pagination-btn pagination-next" onclick="navigateToPage(${currentPage + 1})">Next</button>`
+            : `<button class="pagination-btn pagination-next disabled" disabled>Next</button>`
+        }
+      </div>
+    </div>
+  `;
+}
+
 /* -------------------------------------------------------------------------- */
 /*                            Interactions / Events                           */
 /* -------------------------------------------------------------------------- */
@@ -345,6 +388,21 @@ function initializeFeedInteractions(): void {
   (window as any).closeFullPostModal = closeFullPostModal;
   (window as any).showReactionsModal = showReactionsModal;
   (window as any).hideReactionsModal = hideReactionsModal;
+
+  // Define missing navigation functions
+  if (!window.navigateToProfile) {
+    (window as any).navigateToProfile = function(username: string) {
+      window.location.href = `/profile?user=${username}`;
+    };
+  }
+
+  if (!window.navigateToPage) {
+    (window as any).navigateToPage = function(page: number) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('page', page.toString());
+      window.location.href = url.toString();
+    };
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -637,10 +695,6 @@ function closeEditModal(): void {
 /*                           Comments Functionality                           */
 /* -------------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------------- */
-/*                           Comments Functionality                           */
-/* -------------------------------------------------------------------------- */
-
 async function toggleComments(postId: number): Promise<void> {
   const commentsSection = document.getElementById(`comments-${postId}`);
   if (!commentsSection) return;
@@ -660,7 +714,6 @@ async function loadComments(postId: number): Promise<void> {
   const commentsList = document.getElementById(`comments-list-${postId}`);
   if (!commentsList) return;
 
-
   commentsList.innerHTML =
     '<div class="no-comments">No comments yet. Be the first to comment!</div>';
 }
@@ -676,7 +729,7 @@ function renderCommentHTML(
 
   return `
     <div class="comment-item" data-comment-id="${comment.id}" style="animation-delay: ${index * 0.1}s">
-      <div class="comment-avatar">
+      <div class="comment-avatar" onclick="navigateToProfile('${comment.author.name}')" style="cursor: pointer;">
         ${
           comment.author.avatar?.url
             ? `<img src="${comment.author.avatar.url}" alt="${comment.author.avatar.alt || comment.author.name}" class="comment-avatar-img">`
@@ -685,7 +738,13 @@ function renderCommentHTML(
       </div>
       <div class="comment-content">
         <div class="comment-header">
-          <span class="comment-author">${comment.author.name}</span>
+          <span class="comment-author">
+            <a href="/profile?user=${comment.author.name}" 
+               class="author-link" 
+               onclick="event.preventDefault(); navigateToProfile('${comment.author.name}')">
+              ${comment.author.name}
+            </a>
+          </span>
           <span class="comment-time">${timeAgo}</span>
         </div>
         <div class="comment-text">${comment.body}</div>
@@ -874,7 +933,6 @@ function addCommentToUI(postId: number, comment: any): void {
   commentsList.insertAdjacentHTML('beforeend', commentHTML);
 }
 
-
 /* -------------------------------------------------------------------------- */
 /*                            Reply Functionality                             */
 /* -------------------------------------------------------------------------- */
@@ -982,7 +1040,6 @@ async function submitReply(
   }
 }
 
-
 /* -------------------------------------------------------------------------- */
 /*                           Delete Comment                                   */
 /* -------------------------------------------------------------------------- */
@@ -1076,9 +1133,6 @@ function selectReaction(postId: number, emoji: string): void {
   }
 }
 
-/**
- * Show reactions modal on hover
- */
 function showReactionsModal(postId: number): void {
   const modal = document.getElementById(`reactions-${postId}`);
   if (modal) {
@@ -1086,9 +1140,6 @@ function showReactionsModal(postId: number): void {
   }
 }
 
-/**
- * Hide reactions modal when not hovering
- */
 function hideReactionsModal(postId: number): void {
   setTimeout(() => {
     const modal = document.getElementById(`reactions-${postId}`);
@@ -1226,100 +1277,3 @@ function getTimeAgo(date: Date): string {
   if (diffInDays < 7) return `${diffInDays}d ago`;
   return date.toLocaleDateString();
 }
-
-function renderPaginationControls(meta: any): string {
-  if (!meta || meta.pageCount <= 1) return '';
-
-  const currentPage = meta.currentPage;
-  const totalPages = meta.pageCount;
-  const hasPrev = !meta.isFirstPage;
-  const hasNext = !meta.isLastPage;
-
-  return `
-    <div class="pagination-container">
-      <div class="pagination-info">
-        <span class="pagination-text">
-          Page ${currentPage} of ${totalPages} (${meta.totalCount} total posts)
-        </span>
-      </div>
-      <div class="pagination-controls">
-        ${
-          hasPrev
-            ? `<button class="pagination-btn pagination-prev" onclick="navigateToPage(${currentPage - 1})">Previous</button>`
-            : `<button class="pagination-btn pagination-prev disabled" disabled>Previous</button>`
-        }
-        ${currentPage !== 1 ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(1)">1</button>` : ''}
-        <button class="pagination-btn pagination-number active" disabled>${currentPage}</button>
-        ${currentPage !== totalPages ? `<button class="pagination-btn pagination-number" onclick="navigateToPage(${totalPages})">${totalPages}</button>` : ''}
-        ${
-          hasNext
-            ? `<button class="pagination-btn pagination-next" onclick="navigateToPage(${currentPage + 1})">Next</button>`
-            : `<button class="pagination-btn pagination-next disabled" disabled>Next</button>`
-        }
-      </div>
-    </div>
-  `;
-}
-
-/* -------------------------------------------------------------------------- */
-/*                            DEBUGGING HELPERS                               */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Debug function to check if all required functions are available
- */
-function debugPostInteractions(): void {
-  const requiredFunctions = [
-    'togglePostMenu',
-    'editPost',
-    'deletePost',
-    'toggleComments',
-    'submitComment',
-    'toggleReaction',
-    'selectReaction',
-    'viewFullPost',
-    'showReactionsModal',
-    'hideReactionsModal',
-  ];
-
-  console.log('🔍 Checking post interaction functions:');
-  requiredFunctions.forEach((funcName) => {
-    const exists = typeof (window as any)[funcName] === 'function';
-    console.log(
-      `${exists ? '✅' : '❌'} ${funcName}: ${exists ? 'Available' : 'Missing'}`
-    );
-  });
-
-  // Check if posts exist in DOM
-  const postCards = document.querySelectorAll('[data-post-id]');
-  console.log(`📝 Found ${postCards.length} post cards in DOM`);
-
-  // Check if user is logged in
-  const currentUser = getLocalItem('user');
-  console.log(`👤 Current user: ${currentUser || 'Not logged in'}`);
-}
-
-// Make debug function available globally
-(window as any).debugPostInteractions = debugPostInteractions;
-
-// Global navigation functions
-(window as any).navigateToPage = function (page: number) {
-  const url = new URL(window.location.href);
-  url.searchParams.set('page', page.toString());
-  history.pushState(
-    { path: url.pathname + url.search },
-    '',
-    url.pathname + url.search
-  );
-  renderRoute(window.location.pathname);
-};
-
-(window as any).clearSearch = function () {
-  (window as any).searchQuery = null;
-  (window as any).searchResults = null;
-  const searchInput = document.getElementById(
-    'navbar-search'
-  ) as HTMLInputElement;
-  if (searchInput) searchInput.value = '';
-  renderRoute('/');
-};

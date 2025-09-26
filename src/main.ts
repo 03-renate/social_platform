@@ -51,3 +51,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   });
 });
+
+
+function navigateToProfile(username: string) {
+  if (!username || username === 'Unknown') return;
+
+  const url = `/profile?user=${username}`;
+  history.pushState({ path: url }, '', url);
+  (window as any).renderRoute('/profile');
+}
+
+// Make it globally available
+(window as any).navigateToProfile = navigateToProfile;

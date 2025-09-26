@@ -49,6 +49,11 @@ export type NavbarEventHandler = (event: Event) => void;
 export type NavigationRoute = '/' | '/feed' | '/profile' | '/register';
 export type NavbarTheme = 'light' | 'dark' | 'auto';
 
+interface SearchResult {
+  type: 'post' | 'user';
+  data: any;
+}
+
 export default function NavbarPage() {
   const userLoggedIn = isLoggedIn();
 
@@ -130,6 +135,52 @@ export default function NavbarPage() {
       </div>
     </nav>
   `;
+}
+
+/**
+ * Enhanced search function
+ */
+async function enhancedSearch(query: string): Promise<SearchResult[]> {
+  const results: SearchResult[] = [];
+
+  try {
+    // Search for posts
+    const postsResponse = await getAllPosts(50, 1);
+    const matchingPosts = postsResponse.data.filter(
+      (post) =>
+        post.title.toLowerCase().includes(query.toLowerCase()) ||
+        post.body.toLowerCase().includes(query.toLowerCase()) ||
+        post.author.name.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // Add unique users from matching posts
+    const uniqueUsers = new Map();
+    matchingPosts.forEach((post) => {
+      if (post.author.name.toLowerCase().includes(query.toLowerCase())) {
+        uniqueUsers.set(post.author.name, post.author);
+      }
+    });
+
+    // Add user results
+    uniqueUsers.forEach((user) => {
+      results.push({
+        type: 'user',
+        data: user,
+      });
+    });
+
+    // Add post results
+    matchingPosts.forEach((post) => {
+      results.push({
+        type: 'post',
+        data: post,
+      });
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+  }
+
+  return results;
 }
 
 /**
@@ -223,8 +274,8 @@ export function initNavbar() {
     // Load posts when page loads
     loadPostsForSearch();
 
-    // Enhanced search input handler
-    const handleSearchInput = (e: Event) => {
+    // Enhanced search input handler - ACTUALLY USE THIS FUNCTION
+    const handleSearchInput = async (e: Event) => {
       const target = e.target as HTMLInputElement;
       const searchTerm = target.value.toLowerCase().trim();
 
@@ -237,19 +288,19 @@ export function initNavbar() {
         return;
       }
 
-      // Filter posts by content and author name
-      const filteredPosts = allPosts.filter(
-        (post) =>
-          post.body.toLowerCase().includes(searchTerm) ||
-          post.title.toLowerCase().includes(searchTerm) ||
-          post.author.name.toLowerCase().includes(searchTerm)
-      );
+      // Use enhanced search
+      const searchResults = await enhancedSearch(searchTerm);
 
-      // Store search results globally for FeedPage to use
+      // Separate users and posts
+      const userResults = searchResults.filter((r) => r.type === 'user');
+      const postResults = searchResults.filter((r) => r.type === 'post');
+
+      // Store results globally
       (window as any).searchQuery = searchTerm;
-      (window as any).searchResults = filteredPosts;
+      (window as any).searchResults = postResults.map((r) => r.data);
+      (window as any).userResults = userResults.map((r) => r.data);
 
-      // Navigate to feed to show search results
+      // Navigate to feed to show results
       if (window.location.pathname !== '/feed') {
         history.pushState({ path: '/feed' }, '', '/feed');
       }
@@ -265,7 +316,7 @@ export function initNavbar() {
       }
     };
 
-    // Add event listeners
+    // Add event listeners - ACTUALLY USE THE FUNCTION
     searchInput.addEventListener('input', handleSearchInput);
     searchBtn.addEventListener('click', handleSearchClick);
 

@@ -146,6 +146,9 @@ export default async function LoginPage() {
               setLocalItem('user', name);
             }
 
+            // Store the email for profile page usage
+            setLocalItem('userEmail', email);
+
             // Try to get API key
             try {
               const apikey = await fetchApiKey(accessToken);

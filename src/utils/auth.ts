@@ -29,9 +29,16 @@ export function getCurrentUser() {
  * Clear all authentication data (logout)
  */
 export function logout() {
+  // Clear basic auth data
   localStorage.removeItem('accessToken');
   localStorage.removeItem('user');
   localStorage.removeItem('apiKey');
+
+  // Clear profile-related data
+  localStorage.removeItem('userProfile');
+  localStorage.removeItem('userEmail');
+  localStorage.removeItem('noroffUsername');
+  localStorage.removeItem('postsUsername');
 }
 
 /**

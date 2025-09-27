@@ -36,6 +36,12 @@ export default async function router(
     return await FeedPage();
   }
 
+  // If route not found and user is logged in, redirect to feed
+  if (!currentRoute && isLoggedIn()) {
+    history.pushState({ path: '/feed' }, '', '/feed');
+    return await FeedPage();
+  }
+
   const container = document.getElementById(APP_CONTAINER_CLASSNAME);
   if (!container) return;
 

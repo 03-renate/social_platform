@@ -169,10 +169,13 @@ export default async function LoginPage() {
               (window as any).refreshNavbar();
             }
 
-            // Redirect to home page
+            // Ensure data is stored before redirect
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Redirect to feed page directly
             setTimeout(() => {
-              history.pushState({ path: '/' }, '', '/');
-              renderRoute('/');
+              history.pushState({ path: '/feed' }, '', '/feed');
+              renderRoute('/feed');
             }, 1500);
           } else {
             // Unexpected response format

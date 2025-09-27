@@ -113,25 +113,25 @@ export default async function LoginPage() {
               // Provide more specific error messages based on API response
               if (errorMessage.toLowerCase().includes('email')) {
                 formError.textContent =
-                  ' Email address not found. Please check your email or register for an account.';
+                  '❌ Email address not found. Please check your email or register for an account.';
               } else if (errorMessage.toLowerCase().includes('password')) {
                 formError.textContent =
-                  ' Incorrect password. Please check your password and try again.';
+                  '❌ Incorrect password. Please check your password and try again.';
               } else if (
                 errorMessage.toLowerCase().includes('user') &&
                 errorMessage.toLowerCase().includes('not')
               ) {
                 formError.textContent =
-                  ' No account found with this email. Please register first.';
+                  '❌ No account found with this email. Please register first.';
               } else if (errorMessage.toLowerCase().includes('invalid')) {
                 formError.textContent =
-                  ' Invalid login credentials. Please check your email and password.';
+                  '❌ Invalid login credentials. Please check your email and password.';
               } else if (errorMessage.toLowerCase().includes('credentials')) {
                 formError.textContent =
-                  ' Invalid email or password. Please double-check your credentials.';
+                  '❌ Invalid email or password. Please double-check your credentials.';
               } else {
                 // Show the original API error message if we can't categorize it
-                formError.textContent = ` ${errorMessage}`;
+                formError.textContent = `❌ ${errorMessage}`;
               }
             }
           } else if (result.data) {
@@ -170,7 +170,10 @@ export default async function LoginPage() {
               (window as any).refreshNavbar();
             }
 
-            // Redirect to feed page
+            // Ensure data is stored before redirect
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Redirect to feed page directly
             setTimeout(() => {
               history.pushState({ path: '/feed' }, '', '/feed');
               renderRoute('/feed');

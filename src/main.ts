@@ -1,4 +1,5 @@
 import './style.css';
+import '../src/styles/profilePage.css';
 import { renderRoute } from './router';
 import LoadingScreen from './pages/LoadingScreen.js';
 import NavbarPage, { initNavbar } from './pages/NavbarPage.js';

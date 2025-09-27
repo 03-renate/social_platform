@@ -103,7 +103,6 @@ export default async function LoginPage() {
         const loginData: LoginCredentials = { email, password };
 
         try {
-          console.log('Attempting login with:', { email });
           const result: ApiResponse<LoginResponse> = await loginUser(loginData);
 
           if (result.errors && result.errors.length > 0) {
@@ -146,6 +145,9 @@ export default async function LoginPage() {
               setLocalItem('user', name);
             }
 
+            // Store the email for profile page usage
+            setLocalItem('userEmail', email);
+
             // Try to get API key
             try {
               const apikey = await fetchApiKey(accessToken);
@@ -154,7 +156,6 @@ export default async function LoginPage() {
               }
             } catch (apiError) {
               console.warn('Failed to get API key:', apiError);
-              // Continue anyway - API key is optional for basic functionality
             }
 
             // Show success message
@@ -226,7 +227,7 @@ export default async function LoginPage() {
         <div class="auth-container">
             <div class="auth-card">
                 <h1>Welcome Back</h1>
-                <div id="loginMessage" style="margin-bottom: 1rem; text-align: center; font-weight: 500;"></div>
+                <div id="loginMessage" class="auth-message"></div>
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="loginEmail">Email Address</label>
@@ -236,14 +237,14 @@ export default async function LoginPage() {
                         <label for="loginPassword">Password</label>
                         <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                    <button type="submit" class="btn btn-primary auth-submit-btn">
                         🚀 Sign In
                     </button>
                 </form>
                 
-                <div class="login-tips" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
-                    <div style="color: #94a3b8; margin-bottom: 0.5rem;"><strong>💡 Login Tips:</strong></div>
-                    <ul style="color: #64748b; margin: 0; padding-left: 1.2rem;">
+                <div class="login-tips">
+                    <div class="login-tips-title"><strong>💡 Login Tips:</strong></div>
+                    <ul>
                         <li>Use your @stud.noroff.no email address</li>
                         <li>Password must be at least 8 characters</li>
                         <li>Make sure you've registered an account first</li>
@@ -254,6 +255,7 @@ export default async function LoginPage() {
                     <p>Don't have an account? <a href="#" id="register-link">Create one here</a></p>
                     
                 </div>
+            </div>
         </div>
     </div>
   `;

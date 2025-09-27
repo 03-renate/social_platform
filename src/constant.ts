@@ -5,7 +5,7 @@
  * @author Your Name
  */
 
-export const BASE_URL = import.meta.env.BASE_URL || 'https://dummyjson.com';
+export const BASE_URL = import.meta.env.BASE_URL || 'https://v2.api.noroff.dev';
 export const API_URL = import.meta.env.API_URL || 'https://v2.api.noroff.dev';
 export const SEARCH_URL =
   import.meta.env.SEARCH_URL ||

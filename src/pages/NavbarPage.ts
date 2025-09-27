@@ -6,6 +6,7 @@
 
 import { renderRoute } from '../router';
 import { isLoggedIn, logout } from '../utils/auth';
+import { searchPosts } from '../services/posts/posts';
 
 // TypeScript interfaces and types for NavbarPage
 export interface NavbarElements {
@@ -195,20 +196,83 @@ export function initNavbar() {
 
   // Search functionality
   if (searchBtn && searchInput) {
-    const handleSearch = () => {
+    const searchButton = searchBtn as HTMLButtonElement;
+    
+    const handleSearch = async () => {
       const query = searchInput.value.trim();
       if (query) {
-        console.log('Searching for:', query);
-        // TODO: Implement search functionality
-        // This could navigate to a search results page or filter current content
+        // Show loading state
+        searchButton.disabled = true;
+        searchButton.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        `;
+
+        try {
+          // Perform the search
+          const searchResults = await searchPosts(query, 20);
+          
+          if (searchResults.data && searchResults.data.length > 0) {
+            // Navigate to feed page with search results
+            // Store search results globally for the feed page to use
+            (window as any).searchResults = {
+              query: query,
+              results: searchResults.data,
+              timestamp: Date.now()
+            };
+            
+            // Navigate to feed page with search parameter
+            const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+            history.pushState({ path: searchUrl }, '', searchUrl);
+            renderRoute('/feed');
+            
+            // Clear the search input
+            searchInput.value = '';
+            
+            // Show success message briefly
+            showSearchMessage(`Found ${searchResults.data.length} results for "${query}"`, 'success');
+          } else {
+            // No results found
+            showSearchMessage(`No results found for "${query}"`, 'info');
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          showSearchMessage('Search failed. Please try again.', 'error');
+        } finally {
+          // Reset search button
+          searchButton.disabled = false;
+          searchButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          `;
+        }
       }
     };
 
-    searchBtn.addEventListener('click', handleSearch);
+    searchButton.addEventListener('click', handleSearch);
 
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         handleSearch();
+      }
+    });
+
+    // Clear search results when input is cleared
+    searchInput.addEventListener('input', () => {
+      if (searchInput.value.trim() === '') {
+        // Clear any stored search results
+        if ((window as any).searchResults) {
+          delete (window as any).searchResults;
+          // If we're on feed page with search params, reload without search
+          const currentUrl = new URL(window.location.href);
+          if (currentUrl.pathname === '/feed' && currentUrl.searchParams.has('search')) {
+            history.pushState({ path: '/feed' }, '', '/feed');
+            renderRoute('/feed');
+          }
+        }
       }
     });
   }
@@ -296,4 +360,74 @@ function showLogoutMessage() {
       notification.parentNode.removeChild(notification);
     }
   }, 3000);
+}
+
+/**
+ * Show search message/notification
+ */
+function showSearchMessage(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `search-notification ${type}`;
+  
+  // Icon based on type
+  let icon = '';
+  switch (type) {
+    case 'success':
+      icon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9"></circle>
+      </svg>`;
+      break;
+    case 'error':
+      icon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>`;
+      break;
+    case 'info':
+      icon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>`;
+      break;
+    default:
+      icon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+      </svg>`;
+  }
+  
+  notification.innerHTML = `
+    <div class="notification-content">
+      ${icon}
+      ${message}
+    </div>
+  `;
+
+  // Add some basic styling
+  notification.style.cssText = `
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-xl);
+    z-index: 1001;
+    animation: slideInFromRight 0.3s ease-out forwards;
+    max-width: 300px;
+  `;
+
+  document.body.appendChild(notification);
+
+  // Remove notification after 4 seconds
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.style.animation = 'slideOutToRight 0.3s ease-out forwards';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }
+  }, 4000);
 }

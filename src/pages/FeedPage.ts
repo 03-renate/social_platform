@@ -26,18 +26,47 @@ export default async function FeedPage(): Promise<string> {
       return renderWelcomePage();
     }
 
-    // Get current page from URL parameters
+    // Check for search results first
+    const searchData = (window as any).searchResults;
     const urlParams = new URLSearchParams(window.location.search);
-    const currentPage = parseInt(urlParams.get('page') || '1');
-    const postsPerPage = 15;
+    const searchQuery = urlParams.get('search');
 
-    // Fetch posts from API with pagination
-    const postsResponse = await getAllPosts(postsPerPage, currentPage);
-    const posts = postsResponse.data;
+    let posts: NoroffPost[];
+    let isSearchResults = false;
+    let searchResultsInfo = '';
+    let paginationMeta = null;
+
+    if (searchData && searchQuery && searchData.query === searchQuery) {
+      // Use search results
+      posts = searchData.results;
+      isSearchResults = true;
+      searchResultsInfo = `
+        <div class="search-results-info">
+          <p>🔍 Search results for "<strong>${searchQuery}</strong>" (${posts.length} results found)</p>
+          <button class="clear-search-btn" onclick="clearSearch()">Clear Search</button>
+        </div>
+      `;
+    } else {
+      // Get current page from URL parameters for regular feed
+      const currentPage = parseInt(urlParams.get('page') || '1');
+      const postsPerPage = 15;
+
+      // Fetch posts from API with pagination
+      const postsResponse = await getAllPosts(postsPerPage, currentPage);
+      posts = postsResponse.data;
+      paginationMeta = postsResponse.meta;
+    }
 
     // Set up event listeners after DOM is rendered
     setTimeout(() => {
       initializeFeedInteractions();
+      
+      // Add clear search functionality
+      (window as any).clearSearch = () => {
+        delete (window as any).searchResults;
+        history.pushState({ path: '/feed' }, '', '/feed');
+        renderRoute('/feed');
+      };
     }, 100);
 
     return `
@@ -45,8 +74,13 @@ export default async function FeedPage(): Promise<string> {
         <main class="feed-container">
           <!-- Feed Header -->
           <header class="feed-header">
-            <h1 class="feed-title">Your Feed</h1>
-            <p class="feed-subtitle">Discover what's happening in your network (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})</p>
+            <h1 class="feed-title">${isSearchResults ? 'Search Results' : 'Your Feed'}</h1>
+            <p class="feed-subtitle">${
+              isSearchResults 
+                ? `Results for your search query` 
+                : `Discover what's happening in your network`
+            }</p>
+            ${searchResultsInfo}
           </header>
 
           <!-- Posts Container -->
@@ -61,7 +95,7 @@ export default async function FeedPage(): Promise<string> {
           </div>
 
           <!-- Pagination Controls -->
-          ${renderPaginationControls(postsResponse.meta)}
+          ${paginationMeta ? renderPaginationControls(paginationMeta) : ''}
         </main>
       </div>
     `;

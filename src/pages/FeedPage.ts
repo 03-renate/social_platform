@@ -33,28 +33,12 @@ export default async function FeedPage(): Promise<string> {
 
     let posts: NoroffPost[];
     let isSearchResults = false;
-    let searchResultsInfo = '';
     let paginationMeta = null;
 
     if (searchData && searchQuery && searchData.query === searchQuery) {
       // Use filtered search results
       posts = searchData.results;
       isSearchResults = true;
-      searchResultsInfo = `
-        <div class="search-results-info">
-          <div class="search-info-text">
-            <span class="search-icon">🔍</span>
-            <span>Showing <strong>${posts.length} results</strong> for "<strong>${searchQuery}</strong>"</span>
-          </div>
-          <button class="clear-search-btn" onclick="clearSearch()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-            Clear
-          </button>
-        </div>
-      `;
     } else {
       // Get current page from URL parameters for regular feed
       const currentPage = parseInt(urlParams.get('page') || '1');
@@ -73,7 +57,7 @@ export default async function FeedPage(): Promise<string> {
     setTimeout(() => {
       initializeFeedInteractions();
       
-      // Add clear search functionality
+      // Add clear search functionality (accessible via Escape key or clearing search input)
       (window as any).clearSearch = () => {
         delete (window as any).searchResults;
         delete (window as any).filteredPosts;
@@ -90,25 +74,6 @@ export default async function FeedPage(): Promise<string> {
         history.pushState({ path: '/feed' }, '', '/feed');
         renderRoute('/feed');
       };
-      
-      // Add enhanced search animations for filtered posts
-      if (isSearchResults && posts.length > 0) {
-        const postsContainer = document.getElementById('posts-container');
-        if (postsContainer) {
-          const postCards = postsContainer.querySelectorAll('.post-card');
-          postCards.forEach((card, index) => {
-            const element = card as HTMLElement;
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-              element.style.transition = 'all 0.4s ease-out';
-              element.style.opacity = '1';
-              element.style.transform = 'translateY(0)';
-            }, index * 100);
-          });
-        }
-      }
     }, 100);
 
     return `
@@ -116,13 +81,12 @@ export default async function FeedPage(): Promise<string> {
         <main class="feed-container">
           <!-- Feed Header -->
           <header class="feed-header">
-            <h1 class="feed-title">${isSearchResults ? 'Search Results' : 'Your Feed'}</h1>
+            <h1 class="feed-title">${isSearchResults ? 'Feed' : 'Your Feed'}</h1>
             <p class="feed-subtitle">${
               isSearchResults 
-                ? `Results for your search query` 
+                ? `Discover what's happening in your network` 
                 : `Discover what's happening in your network`
             }</p>
-            ${searchResultsInfo}
           </header>
 
           <!-- Posts Container -->

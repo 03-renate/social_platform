@@ -28,17 +28,27 @@ function refreshNavbar() {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-  // Add navbar to the page
-  const navbar = NavbarPage();
-  document.body.insertAdjacentHTML('afterbegin', navbar);
+  console.log('DOM Content Loaded - Starting app initialization');
+
+  try {
+    // Add navbar to the page
+    const navbar = NavbarPage();
+    console.log('Navbar created, length:', navbar.length);
+    document.body.insertAdjacentHTML('afterbegin', navbar);
+  } catch (error) {
+    console.error('Error creating navbar:', error);
+  }
 
   // Initialize navbar functionality with a small delay to ensure DOM is ready
   setTimeout(() => {
     initNavbar();
   }, 100);
 
-  // Handle initial route
-  renderRoute();
+  // Handle initial route - ensure we get the current path
+  const currentPath = window.location.pathname;
+  console.log('About to call renderRoute with path:', currentPath);
+  renderRoute(currentPath);
+  console.log('renderRoute called');
 
   // Handle browser navigation (back/forward buttons)
   window.addEventListener('popstate', () => {
@@ -51,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   });
 });
-
 
 function navigateToProfile(username: string) {
   if (!username || username === 'Unknown') return;

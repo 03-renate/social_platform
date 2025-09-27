@@ -42,13 +42,13 @@ export default async function FeedPage(): Promise<string> {
     } else {
       // Get current page from URL parameters for regular feed
       const currentPage = parseInt(urlParams.get('page') || '1');
-      const postsPerPage = 50; // Increased to load more posts for better local search
+      const postsPerPage = 15; // Set to 15 posts per page as requested
 
       // Fetch posts from API with pagination
       const postsResponse = await getAllPosts(postsPerPage, currentPage);
       posts = postsResponse.data;
       paginationMeta = postsResponse.meta;
-      
+
       // Store all posts globally for local search filtering
       (window as any).allPosts = posts;
     }
@@ -56,20 +56,22 @@ export default async function FeedPage(): Promise<string> {
     // Set up event listeners after DOM is rendered
     setTimeout(() => {
       initializeFeedInteractions();
-      
+
       // Add clear search functionality (accessible via Escape key or clearing search input)
       (window as any).clearSearch = () => {
         delete (window as any).searchResults;
         delete (window as any).filteredPosts;
-        
+
         // Clear search input
-        const searchInput = document.getElementById('navbar-search') as HTMLInputElement;
+        const searchInput = document.getElementById(
+          'navbar-search'
+        ) as HTMLInputElement;
         if (searchInput) {
           searchInput.value = '';
           searchInput.style.background = '';
           searchInput.style.opacity = '';
         }
-        
+
         // Navigate back to regular feed
         history.pushState({ path: '/feed' }, '', '/feed');
         renderRoute('/feed');
@@ -83,8 +85,8 @@ export default async function FeedPage(): Promise<string> {
           <header class="feed-header">
             <h1 class="feed-title">${isSearchResults ? 'Feed' : 'Your Feed'}</h1>
             <p class="feed-subtitle">${
-              isSearchResults 
-                ? `Discover what's happening in your network` 
+              isSearchResults
+                ? `Discover what's happening in your network`
                 : `Discover what's happening in your network`
             }</p>
           </header>
@@ -336,12 +338,6 @@ function handleLikeClick(event: Event): void {
   // TODO: Implement actual like API call
   console.log('Liked post:', postId);
 }
-
-
-
-
-
-
 
 /**
  * Handle comment toggle (show/hide comments section)

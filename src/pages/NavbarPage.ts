@@ -196,20 +196,23 @@ export function initNavbar() {
   // Search functionality - Local filtering search as you type
   if (searchBtn && searchInput) {
     const searchButton = searchBtn as HTMLButtonElement;
-    
+
     // Real-time local search as user types
     const performLocalSearch = (query: string) => {
       if (query.length === 0) {
         // Clear search and reload posts
         delete (window as any).searchResults;
         delete (window as any).filteredPosts;
-        
+
         // Clear search input styling
         searchInput.style.background = '';
         searchInput.style.opacity = '';
-        
+
         // Reload original posts if on feed page
-        if (window.location.pathname === '/' || window.location.pathname === '/feed') {
+        if (
+          window.location.pathname === '/' ||
+          window.location.pathname === '/feed'
+        ) {
           history.pushState({ path: '/feed' }, '', '/feed');
           renderRoute('/feed');
         }
@@ -218,25 +221,28 @@ export function initNavbar() {
 
       // Get all posts from the current page
       const allPosts = (window as any).allPosts || [];
-      
+
       if (allPosts.length === 0) {
         // No posts loaded yet
         return;
       }
 
       // Filter posts locally
-      const filteredPosts = allPosts.filter((post: any) => 
-        post.body?.toLowerCase().includes(query.toLowerCase()) ||
-        post.title?.toLowerCase().includes(query.toLowerCase()) ||
-        post.author?.name?.toLowerCase().includes(query.toLowerCase()) ||
-        post.tags?.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase()))
+      const filteredPosts = allPosts.filter(
+        (post: any) =>
+          post.body?.toLowerCase().includes(query.toLowerCase()) ||
+          post.title?.toLowerCase().includes(query.toLowerCase()) ||
+          post.author?.name?.toLowerCase().includes(query.toLowerCase()) ||
+          post.tags?.some((tag: string) =>
+            tag.toLowerCase().includes(query.toLowerCase())
+          )
       );
 
       // Store filtered results globally
       (window as any).searchResults = {
         query: query,
         results: filteredPosts,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       (window as any).filteredPosts = filteredPosts;
 
@@ -245,7 +251,10 @@ export function initNavbar() {
       searchInput.style.opacity = '0.9';
 
       // Update feed page with filtered results
-      if (window.location.pathname === '/' || window.location.pathname === '/feed') {
+      if (
+        window.location.pathname === '/' ||
+        window.location.pathname === '/feed'
+      ) {
         const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
         history.pushState({ path: searchUrl }, '', searchUrl);
         renderRoute('/feed');
@@ -285,7 +294,7 @@ export function initNavbar() {
         searchInput.focus();
         searchInput.select();
       }
-      
+
       // Escape to clear search
       if (e.key === 'Escape' && document.activeElement === searchInput) {
         searchInput.value = '';
@@ -379,5 +388,3 @@ function showLogoutMessage() {
     }
   }, 3000);
 }
-
-

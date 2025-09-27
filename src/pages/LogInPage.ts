@@ -171,7 +171,7 @@ export default async function LoginPage() {
             }
 
             // Ensure data is stored before redirect
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             // Redirect to feed page directly
             setTimeout(() => {

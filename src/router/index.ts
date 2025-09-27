@@ -9,6 +9,7 @@ import { isLoggedIn } from '../utils/auth';
 
 const PATHS = {
   login: { url: '/', component: LoginPage },
+  loginAlt: { url: '/login', component: LoginPage },
   feed: { url: '/feed', component: FeedPage, protected: true },
   profile: { url: '/profile', component: ProfilePage, protected: true },
   register: { url: '/register', component: RegisterPage },
@@ -30,8 +31,8 @@ export default async function router(
     return await LoginPage();
   }
 
-  // Redirect from root to feed if logged in
-  if (currentPath === '/' && isLoggedIn()) {
+  // Redirect from root or login to feed if logged in
+  if ((currentPath === '/' || currentPath === '/login') && isLoggedIn()) {
     history.pushState({ path: '/feed' }, '', '/feed');
     return await FeedPage();
   }

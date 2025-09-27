@@ -6,7 +6,6 @@
 
 import { renderRoute } from '../router';
 import { isLoggedIn, logout } from '../utils/auth';
-import { searchPosts } from '../services/posts/posts';
 
 // TypeScript interfaces and types for NavbarPage
 export interface NavbarElements {
@@ -194,97 +193,104 @@ export function initNavbar() {
     });
   }
 
-  // Search functionality - Real-time search as you type
+  // Search functionality - Local filtering search as you type
   if (searchBtn && searchInput) {
     const searchButton = searchBtn as HTMLButtonElement;
-    let searchTimeout: NodeJS.Timeout;
     
-    // Real-time search as user types
-    const performLiveSearch = async (query: string) => {
+    // Real-time local search as user types
+    const performLocalSearch = (query: string) => {
       if (query.length === 0) {
-        // Clear search results and go back to regular feed
-        if ((window as any).searchResults) {
-          delete (window as any).searchResults;
-          if (window.location.pathname === '/feed') {
-            history.pushState({ path: '/feed' }, '', '/feed');
-            renderRoute('/feed');
-          }
-        }
-        return;
-      }
-
-      if (query.length < 2) {
-        // Don't search for very short queries
-        return;
-      }
-
-      try {
-        // Show loading state in search input
-        searchInput.style.background = 'var(--bg-glass)';
-        searchInput.style.opacity = '0.7';
-
-        // Perform the search
-        const searchResults = await searchPosts(query, 50);
+        // Clear search and reload posts
+        delete (window as any).searchResults;
+        delete (window as any).filteredPosts;
         
-        if (searchResults.data) {
-          // Store search results globally for the feed page to use
-          (window as any).searchResults = {
-            query: query,
-            results: searchResults.data,
-            timestamp: Date.now()
-          };
-          
-          // If we're on feed page, update it with search results
-          if (window.location.pathname === '/feed') {
-            const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
-            history.pushState({ path: searchUrl }, '', searchUrl);
-            renderRoute('/feed');
-          } else {
-            // Navigate to feed page with search results
-            const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
-            history.pushState({ path: searchUrl }, '', searchUrl);
-            renderRoute('/feed');
-          }
-        }
-      } catch (error) {
-        console.error('Live search error:', error);
-      } finally {
-        // Reset search input appearance
+        // Clear search input styling
         searchInput.style.background = '';
         searchInput.style.opacity = '';
+        
+        // Reload original posts if on feed page
+        if (window.location.pathname === '/' || window.location.pathname === '/feed') {
+          history.pushState({ path: '/feed' }, '', '/feed');
+          renderRoute('/feed');
+        }
+        return;
+      }
+
+      // Get all posts from the current page
+      const allPosts = (window as any).allPosts || [];
+      
+      if (allPosts.length === 0) {
+        // No posts loaded yet
+        return;
+      }
+
+      // Filter posts locally
+      const filteredPosts = allPosts.filter((post: any) => 
+        post.body?.toLowerCase().includes(query.toLowerCase()) ||
+        post.title?.toLowerCase().includes(query.toLowerCase()) ||
+        post.author?.name?.toLowerCase().includes(query.toLowerCase()) ||
+        post.tags?.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase()))
+      );
+
+      // Store filtered results globally
+      (window as any).searchResults = {
+        query: query,
+        results: filteredPosts,
+        timestamp: Date.now()
+      };
+      (window as any).filteredPosts = filteredPosts;
+
+      // Show search styling
+      searchInput.style.background = 'var(--bg-glass)';
+      searchInput.style.opacity = '0.9';
+
+      // Update feed page with filtered results
+      if (window.location.pathname === '/' || window.location.pathname === '/feed') {
+        const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+        history.pushState({ path: searchUrl }, '', searchUrl);
+        renderRoute('/feed');
+      } else {
+        // Navigate to feed page with search results
+        const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+        history.pushState({ path: searchUrl }, '', searchUrl);
+        renderRoute('/feed');
       }
     };
 
-    // Handle input changes with debouncing
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.trim();
-      
-      // Clear previous timeout
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-      
-      // Set new timeout for search (300ms delay)
-      searchTimeout = setTimeout(() => {
-        performLiveSearch(query);
-      }, 300);
+    // Handle input changes - immediate search (no debouncing for local search)
+    searchInput.addEventListener('input', (e) => {
+      const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+      performLocalSearch(query);
     });
 
     // Handle search button click
     searchButton.addEventListener('click', () => {
       const query = searchInput.value.trim();
-      if (query) {
-        performLiveSearch(query);
-      }
+      performLocalSearch(query);
     });
 
     // Handle Enter key
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         const query = searchInput.value.trim();
-        if (query) {
-          performLiveSearch(query);
-        }
+        performLocalSearch(query);
+      }
+    });
+
+    // Enhanced keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + K for search focus
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+      
+      // Escape to clear search
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        performLocalSearch('');
+        searchInput.blur();
       }
     });
   }

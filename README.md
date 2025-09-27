@@ -126,7 +126,7 @@ src/
 * View own profile
 * Group extras: Comment on posts, reply to comments, react to posts ✅
 
-## 🧪 Testing
+## Testing
 
 * Unit tests for helpers
 * Component tests for UI

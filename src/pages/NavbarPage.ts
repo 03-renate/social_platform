@@ -193,22 +193,113 @@ export function initNavbar() {
     });
   }
 
-  // Search functionality
+  // Search functionality - Local filtering search as you type
   if (searchBtn && searchInput) {
-    const handleSearch = () => {
-      const query = searchInput.value.trim();
-      if (query) {
-        console.log('Searching for:', query);
-        // TODO: Implement search functionality
-        // This could navigate to a search results page or filter current content
+    const searchButton = searchBtn as HTMLButtonElement;
+
+    // Real-time local search as user types
+    const performLocalSearch = (query: string) => {
+      if (query.length === 0) {
+        // Clear search and reload posts
+        delete (window as any).searchResults;
+        delete (window as any).filteredPosts;
+
+        // Clear search input styling
+        searchInput.style.background = '';
+        searchInput.style.opacity = '';
+
+        // Reload original posts if on feed page
+        if (
+          window.location.pathname === '/' ||
+          window.location.pathname === '/feed'
+        ) {
+          history.pushState({ path: '/feed' }, '', '/feed');
+          renderRoute('/feed');
+        }
+        return;
+      }
+
+      // Get all posts from the current page
+      const allPosts = (window as any).allPosts || [];
+
+      if (allPosts.length === 0) {
+        // No posts loaded yet
+        return;
+      }
+
+      // Filter posts locally
+      const filteredPosts = allPosts.filter(
+        (post: any) =>
+          post.body?.toLowerCase().includes(query.toLowerCase()) ||
+          post.title?.toLowerCase().includes(query.toLowerCase()) ||
+          post.author?.name?.toLowerCase().includes(query.toLowerCase()) ||
+          post.tags?.some((tag: string) =>
+            tag.toLowerCase().includes(query.toLowerCase())
+          )
+      );
+
+      // Store filtered results globally
+      (window as any).searchResults = {
+        query: query,
+        results: filteredPosts,
+        timestamp: Date.now(),
+      };
+      (window as any).filteredPosts = filteredPosts;
+
+      // Show search styling
+      searchInput.style.background = 'var(--bg-glass)';
+      searchInput.style.opacity = '0.9';
+
+      // Update feed page with filtered results
+      if (
+        window.location.pathname === '/' ||
+        window.location.pathname === '/feed'
+      ) {
+        const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+        history.pushState({ path: searchUrl }, '', searchUrl);
+        renderRoute('/feed');
+      } else {
+        // Navigate to feed page with search results
+        const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+        history.pushState({ path: searchUrl }, '', searchUrl);
+        renderRoute('/feed');
       }
     };
 
-    searchBtn.addEventListener('click', handleSearch);
+    // Handle input changes - immediate search (no debouncing for local search)
+    searchInput.addEventListener('input', (e) => {
+      const query = (e.target as HTMLInputElement).value.toLowerCase().trim();
+      performLocalSearch(query);
+    });
 
+    // Handle search button click
+    searchButton.addEventListener('click', () => {
+      const query = searchInput.value.trim();
+      performLocalSearch(query);
+    });
+
+    // Handle Enter key
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        handleSearch();
+        const query = searchInput.value.trim();
+        performLocalSearch(query);
+      }
+    });
+
+    // Enhanced keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + K for search focus
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+
+      // Escape to clear search
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        performLocalSearch('');
+        searchInput.blur();
       }
     });
   }

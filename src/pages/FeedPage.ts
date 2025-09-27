@@ -26,18 +26,56 @@ export default async function FeedPage(): Promise<string> {
       return renderWelcomePage();
     }
 
-    // Get current page from URL parameters
+    // Check for search results first
+    const searchData = (window as any).searchResults;
     const urlParams = new URLSearchParams(window.location.search);
-    const currentPage = parseInt(urlParams.get('page') || '1');
-    const postsPerPage = 15;
+    const searchQuery = urlParams.get('search');
 
-    // Fetch posts from API with pagination
-    const postsResponse = await getAllPosts(postsPerPage, currentPage);
-    const posts = postsResponse.data;
+    let posts: NoroffPost[];
+    let isSearchResults = false;
+    let paginationMeta = null;
+
+    if (searchData && searchQuery && searchData.query === searchQuery) {
+      // Use filtered search results
+      posts = searchData.results;
+      isSearchResults = true;
+    } else {
+      // Get current page from URL parameters for regular feed
+      const currentPage = parseInt(urlParams.get('page') || '1');
+      const postsPerPage = 15; // Set to 15 posts per page as requested
+
+      // Fetch posts from API with pagination
+      const postsResponse = await getAllPosts(postsPerPage, currentPage);
+      posts = postsResponse.data;
+      paginationMeta = postsResponse.meta;
+
+      // Store all posts globally for local search filtering
+      (window as any).allPosts = posts;
+    }
 
     // Set up event listeners after DOM is rendered
     setTimeout(() => {
       initializeFeedInteractions();
+
+      // Add clear search functionality (accessible via Escape key or clearing search input)
+      (window as any).clearSearch = () => {
+        delete (window as any).searchResults;
+        delete (window as any).filteredPosts;
+
+        // Clear search input
+        const searchInput = document.getElementById(
+          'navbar-search'
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.value = '';
+          searchInput.style.background = '';
+          searchInput.style.opacity = '';
+        }
+
+        // Navigate back to regular feed
+        history.pushState({ path: '/feed' }, '', '/feed');
+        renderRoute('/feed');
+      };
     }, 100);
 
     return `
@@ -45,8 +83,12 @@ export default async function FeedPage(): Promise<string> {
         <main class="feed-container">
           <!-- Feed Header -->
           <header class="feed-header">
-            <h1 class="feed-title">Your Feed</h1>
-            <p class="feed-subtitle">Discover what's happening in your network (Page ${postsResponse.meta.currentPage} of ${postsResponse.meta.pageCount})</p>
+            <h1 class="feed-title">${isSearchResults ? 'Feed' : 'Your Feed'}</h1>
+            <p class="feed-subtitle">${
+              isSearchResults
+                ? `Discover what's happening in your network`
+                : `Discover what's happening in your network`
+            }</p>
           </header>
 
           <!-- Posts Container -->
@@ -61,7 +103,7 @@ export default async function FeedPage(): Promise<string> {
           </div>
 
           <!-- Pagination Controls -->
-          ${renderPaginationControls(postsResponse.meta)}
+          ${paginationMeta ? renderPaginationControls(paginationMeta) : ''}
         </main>
       </div>
     `;
@@ -295,50 +337,6 @@ function handleLikeClick(event: Event): void {
 
   // TODO: Implement actual like API call
   console.log('Liked post:', postId);
-}
-
-/**
- * Handle comment button clicks
- */
-function handleCommentClick(event: Event): void {
-  const button = event.currentTarget as HTMLElement;
-  const postId = button.dataset.postId;
-
-  // TODO: Implement comment functionality
-  console.log('Comment on post:', postId);
-}
-
-/**
- * Handle share button clicks
- */
-function handleShareClick(event: Event): void {
-  const button = event.currentTarget as HTMLElement;
-  const postId = button.dataset.postId;
-
-  // Simple share functionality
-  if (navigator.share) {
-    navigator.share({
-      title: 'Check out this post',
-      url: window.location.href,
-    });
-  } else {
-    // Fallback - copy to clipboard
-    navigator.clipboard.writeText(window.location.href);
-    alert('Link copied to clipboard!');
-  }
-
-  console.log('Shared post:', postId);
-}
-
-/**
- * Handle read more button clicks
- */
-function handleReadMoreClick(event: Event): void {
-  const button = event.currentTarget as HTMLElement;
-  const postId = button.dataset.postId;
-
-  // TODO: Implement full post view
-  console.log('Read more for post:', postId);
 }
 
 /**

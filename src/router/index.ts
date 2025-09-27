@@ -76,7 +76,10 @@ export default async function router(
       // Redirect to login page
       history.pushState({ path: '/' }, '', '/');
       html = await LoginPage();
-    } else if ((currentPath === '/' || currentPath === '/login') && isLoggedIn()) {
+    } else if (
+      (currentPath === '/' || currentPath === '/login') &&
+      isLoggedIn()
+    ) {
       // If user is logged in and tries to access login page, redirect to feed
       history.pushState({ path: '/feed' }, '', '/feed');
       html = await FeedPage();

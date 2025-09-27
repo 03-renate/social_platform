@@ -150,9 +150,9 @@ ${
                      </div>
 
                      <div class="form-actions">
-                         <button type="submit" class="btn btn-primary">Post</button>
                          <button type="button" id="cancel-post-btn" class="btn btn-secondary">Cancel</button>
-                     </div>
+                         <button type="submit" class="btn btn-primary">Post</button>
+                      </div>
                   </div>
              </form>
          </section>

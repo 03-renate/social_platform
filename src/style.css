@@ -1056,6 +1056,7 @@ body {
   align-items: center;
   flex-wrap: nowrap;
   width: 100%;
+  background-color: var(--bg-primary);
 }
 
 .navbar-brand {
@@ -1192,11 +1193,6 @@ body {
   color: var(--text-primary);
   background: var(--bg-glass);
   backdrop-filter: blur(10px);
-}
-
-.nav-btn.active {
-  color: var(--primary-color);
-  background: rgba(99, 102, 241, 0.1);
 }
 
 .nav-btn svg {
@@ -2654,8 +2650,8 @@ body {
 }
 
 .feed-subtitle {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* === Posts Container === */
@@ -2962,6 +2958,36 @@ body {
   letter-spacing: 0.3px;
 }
 
+.create-post-box.collapsed {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  cursor: text;
+  transition: all 0.25s ease;
+  margin-bottom: 1.5rem;
+}
+.create-post-box.collapsed:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.create-post-box .collapsed-view input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* Expanded state */
+.create-post-box.expanded {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
 /* Inputs / Textarea */
 .create-post-form input,
 .create-post-form textarea {
@@ -2995,57 +3021,55 @@ body {
 }
 
 /* Submit button */
-.create-post-form button[type='submit'] {
-  background: var(
-    --primary-gradient,
-    linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899)
-  );
-  color: #fff;
+/* Form Actions Container */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Button Styles for Create Post Form */
+.create-post-form .btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
   font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  padding: 0.9rem 1.25rem;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.25s ease;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
 }
 
-.create-post-form button[type='submit']:hover {
+.create-post-form .btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.create-post-form .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
 }
 
-/* Collapsed state */
-.create-post-box.collapsed {
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  cursor: text;
-  transition: all 0.25s ease;
-  margin-bottom: 1.5rem;
-}
-.create-post-box.collapsed:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-.create-post-box .collapsed-view input {
-  width: 100%;
-  padding: 0.75rem 1rem;
+.create-post-form .btn-secondary {
   background: transparent;
-  border: none;
-  color: var(--text-muted, #aaa);
-  font-size: 1rem;
-  cursor: pointer;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
-/* Expanded state */
-.create-post-box.expanded {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+.create-post-form .btn-secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
 }
+
 
 /* Post Owner Controls */
 .post-owner-controls {

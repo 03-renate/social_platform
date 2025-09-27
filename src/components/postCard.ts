@@ -174,7 +174,7 @@ export default function postCard(
 
           <!-- View Full Post Button -->
           <button class="action-btn-compact view-btn" data-post-id="${id}" onclick="viewFullPost(${id})">
-            👁 <span class="action-label">View</span>
+            👀 <span class="action-label">View Post</span>
           </button>
         </div>
       </footer>

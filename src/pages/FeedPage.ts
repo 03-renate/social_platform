@@ -231,7 +231,7 @@ ${
       <div class="modal" id="fullPostModal" style="display: none;">
         <div class="modal-content">
           <div class="modal-header">
-            <h3>📄 Full Post</h3>
+            <h3>Full Post</h3>
             <button class="modal-close" onclick="closeFullPostModal()">×</button>
           </div>
           <div id="fullPostContent">

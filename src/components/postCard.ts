@@ -1,40 +1,59 @@
 /**
- * Instagram-like post card component
+ * Enhanced Instagram-like post card component with full CRUD functionality
  * @param post Post object
  * @param animationDelay Animation delay in seconds (for animate.css) - use the index
  */
 
 import type { NoroffPost } from '../services/posts/posts';
+import { getLocalItem } from '../utils/storage';
 
 /**
- * Creates a compact post card HTML for grid layout
+ * Creates a comprehensive post card HTML with full interaction capabilities
  * @param post The post data from Noroff API
  * @param animationDelay Animation delay in seconds
- * @returns HTML string for the compact post card
+ * @returns HTML string for the enhanced post card
  */
 export default function postCard(
   post: NoroffPost,
   animationDelay: number = 0
 ): string {
-  const { id, title, body, tags, media, created, author, _count, reactions } =
-    post;
+  const {
+    id,
+    title = '',
+    body = '',
+    tags = [],
+    media,
+    created,
+    author = { name: 'Unknown', email: 'unknown@mail.com' },
+    _count = { comments: 0, reactions: 0 },
+    reactions = [],
+  } = post;
+
+  // Check if current user owns this post
+  const currentUser = getLocalItem('user');
+  const isOwner = currentUser && author.name === currentUser;
+
+  // Fallback avatar
+  const avatarUrl =
+    author?.avatar?.url || 'https://via.placeholder.com/50?text=U';
+  const avatarAlt = author?.avatar?.alt || author?.name || 'User';
 
   // Format the date
-  const createdDate = new Date(created);
+  const createdDate = created ? new Date(created) : new Date();
   const timeAgo = getTimeAgo(createdDate);
 
-  // Get reaction count
+  // Reaction count
   const reactionCount =
-    reactions?.reduce((total, reaction) => total + reaction.count, 0) || 0;
+    reactions.reduce((total, reaction) => total + reaction.count, 0) || 0;
 
-  // Truncate body text for card preview (shorter for grid)
-  const truncatedBody = body.length > 80 ? body.substring(0, 80) + '...' : body;
+  // Truncate text
+  const truncatedBody =
+    body.length > 120 ? body.substring(0, 120) + '...' : body;
   const truncatedTitle =
-    title && title.length > 40 ? title.substring(0, 40) + '...' : title;
+    title.length > 50 ? title.substring(0, 50) + '...' : title;
 
   return `
-    <article class="post-card" data-post-id="${id}" style="animation-delay: ${animationDelay}s">
-      <!-- Post Media (if exists) -->
+    <article class="post-card" data-post-id="${id}" id="post-${id}" style="animation-delay: ${animationDelay}s">
       ${
         media?.url
           ? `
@@ -45,103 +64,149 @@ export default function postCard(
           : ''
       }
 
-      <!-- Post Header -->
       <header class="post-header-compact">
         <div class="author-info-compact">
-          <div class="author-avatar-small">
-            ${
-              author.avatar?.url
-                ? `<img src="${author.avatar.url}" alt="${author.avatar.alt || author.name}" class="avatar-img-small">`
-                : `<div class="avatar-placeholder-small">${author.name.charAt(0).toUpperCase()}</div>`
-            }
-          </div>
+          <div class="author-avatar-small" 
+                 onclick="navigateToProfile('${author?.name || 'Unknown'}')" 
+                 style="cursor: pointer;">
+                <img src="${avatarUrl}" alt="${avatarAlt}" class="avatar-img-small">
+            </div>
           <div class="author-details-compact">
-            <h4 class="author-name-compact">${author.name}</h4>
-            <p class="post-time-compact">${timeAgo}</p>
+              <h4 class="author-name-compact">
+                <a href="/profile?user=${author?.name || 'Unknown'}" 
+                  class="author-link" 
+                  onclick="event.preventDefault(); navigateToProfile('${author?.name || 'Unknown'}')">
+                  ${author?.name || 'Unknown'}
+                 </a>
+              </h4>
+              <p class="post-time-compact">${timeAgo}</p>
+             </div>
+        </div>
+        
+        ${
+          isOwner
+            ? `
+        <div class="post-owner-controls">
+          <div class="dropdown">
+            <button class="post-menu-btn" onclick="togglePostMenu(${id})" aria-label="Post options">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+              </svg>
+            </button>
+            <div class="dropdown-content post-menu" id="postMenu${id}">
+              <a href="#" class="dropdown-item" onclick="editPost(${id}); return false;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Post
+              </a>
+              <a href="#" class="dropdown-item danger" onclick="deletePost(${id}); return false;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                </svg>
+                Delete Post
+              </a>
+            </div>
           </div>
         </div>
+        `
+            : ''
+        }
       </header>
 
-      <!-- Post Content -->
       <div class="post-content-compact">
         ${truncatedTitle ? `<h3 class="post-title-compact">${truncatedTitle}</h3>` : ''}
-        
-        <div class="post-text-compact">
+        <div class="post-text-compact post-body">
           <p>${truncatedBody}</p>
         </div>
-
         ${
           tags.length > 0
-            ? `
-          <div class="post-tags-compact">
-            ${tags
-              .slice(0, 2)
-              .map((tag) => `<span class="tag-compact">#${tag}</span>`)
-              .join('')}
-            ${tags.length > 2 ? `<span class="tag-more">+${tags.length - 2}</span>` : ''}
-          </div>
-        `
+            ? `<div class="post-tags-compact">
+                ${tags
+                  .slice(0, 2)
+                  .map((tag) => `<span class="tag-compact">#${tag}</span>`)
+                  .join('')}
+                ${
+                  tags.length > 2
+                    ? `<span class="tag-more">+${tags.length - 2}</span>`
+                    : ''
+                }
+              </div>`
             : ''
         }
       </div>
 
-      <!-- Post Actions Compact -->
       <footer class="post-actions-compact">
         <div class="action-buttons-compact">
-          <button class="action-btn-compact like-btn" data-post-id="${id}" aria-label="Like post">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-            </svg>
-            <span class="action-count-compact">${reactionCount}</span>
+          <!-- Like Button with Reactions -->
+          <div style="position: relative;">
+            <button 
+              class="action-btn-compact like-btn" 
+              data-post-id="${id}"
+              onclick="toggleReaction(${id}, '❤️')"
+              onmouseenter="showReactionsModal(${id})"
+              onmouseleave="hideReactionsModal(${id})"
+            >
+              ❤️ <span class="action-count-compact">${reactionCount}</span>
+            </button>
+            
+            <!-- Reactions Modal -->
+            <div class="reactions-modal" id="reactions-${id}" style="display: none;">
+              <div class="reactions-list">
+                ${['👍', '❤️', '😂', '😮', '😢', '😡']
+                  .map(
+                    (emoji) =>
+                      `<button class="reaction-btn" onclick="selectReaction(${id}, '${emoji}')">${emoji}</button>`
+                  )
+                  .join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Comment Button -->
+          <button class="action-btn-compact comment-btn" data-post-id="${id}" onclick="toggleComments(${id})">
+            💬 <span class="action-count-compact">${_count.comments}</span>
           </button>
-          
-          <button class="action-btn-compact comment-btn" data-post-id="${id}" aria-label="Comment on post">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span class="action-count-compact">${_count.comments}</span>
-          </button>
-          
-          <button class="action-btn-compact view-btn" data-post-id="${id}" aria-label="View full post">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
+
+          <!-- View Full Post Button -->
+          <button class="action-btn-compact view-btn" data-post-id="${id}" onclick="viewFullPost(${id})">
+            👁 <span class="action-label">View</span>
           </button>
         </div>
       </footer>
 
-      <!-- Comments Section (Initially Hidden) -->
-      <div class="comments-section" id="comments-${id}" style="display: none;">
-        <div class="comments-list" id="comments-list-${id}">
-          <!-- Comments will be loaded here -->
-        </div>
-        
-        <div class="comment-form">
-          <div class="comment-input-container">
-            <input type="text" class="comment-input" placeholder="Write a comment..." 
-                   id="comment-input-${id}" maxlength="280">
-            <button class="comment-submit-btn" data-post-id="${id}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reactions Modal (Initially Hidden) -->
-      <div class="reactions-modal" id="reactions-${id}" style="display: none;">
-        <div class="reactions-list">
-          <button class="reaction-btn" data-reaction="👍" data-post-id="${id}">👍</button>
-          <button class="reaction-btn" data-reaction="❤️" data-post-id="${id}">❤️</button>
-          <button class="reaction-btn" data-reaction="😂" data-post-id="${id}">😂</button>
-          <button class="reaction-btn" data-reaction="😮" data-post-id="${id}">😮</button>
-          <button class="reaction-btn" data-reaction="😢" data-post-id="${id}">😢</button>
-          <button class="reaction-btn" data-reaction="😡" data-post-id="${id}">😡</button>
-        </div>
-      </div>
+      <!-- Comments Section -->
+<div class="comments-section" id="comments-${id}" style="display: none;">
+  <div class="comments-header">
+    <h4>Comments</h4>
+    <button class="close-comments-btn" onclick="toggleComments(${id})">×</button>
+  </div>
+  <div class="comments-list" id="comments-list-${id}">
+    <!-- Comments will be loaded here -->
+  </div>
+  <div class="comment-form">
+    <div class="comment-input-container">
+      <input 
+        type="text" 
+        id="comment-input-${id}" 
+        class="comment-input" 
+        placeholder="Write a comment..." 
+        maxlength="280"
+        onkeypress="if(event.key === 'Enter') submitComment(${id})"
+      >
+      <button class="comment-submit-btn" onclick="submitComment(${id})">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
     </article>
   `;
 }
@@ -159,15 +224,36 @@ function getTimeAgo(date: Date): string {
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInSeconds < 60) {
-    return 'Just now';
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours}h ago`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays}d ago`;
-  } else {
-    return date.toLocaleDateString();
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+/**
+ * Show reactions modal on hover
+ */
+function showReactionsModal(postId: number): void {
+  const modal = document.getElementById(`reactions-${postId}`);
+  if (modal) {
+    modal.style.display = 'block';
   }
 }
+
+/**
+ * Hide reactions modal when not hovering
+ */
+function hideReactionsModal(postId: number): void {
+  // Add a small delay to allow clicking on reactions
+  setTimeout(() => {
+    const modal = document.getElementById(`reactions-${postId}`);
+    if (modal && !modal.matches(':hover')) {
+      modal.style.display = 'none';
+    }
+  }, 200);
+}
+
+// Make functions globally available
+(window as any).showReactionsModal = showReactionsModal;
+(window as any).hideReactionsModal = hideReactionsModal;

@@ -6,6 +6,22 @@
 
 import { renderRoute } from '../router';
 import { isLoggedIn, logout } from '../utils/auth';
+import {
+  getAllPosts,
+  getPublicPosts,
+  type NoroffPost,
+} from '../services/posts/posts';
+
+// Add the global window interface to actually USE the NoroffPost type
+declare global {
+  interface Window {
+    searchQuery?: string;
+    searchResults?: NoroffPost[]; // This uses the imported type
+    userResults?: any[];
+    navigateToProfile?: (username: string) => void;
+    navigateToPage?: (page: number) => void;
+  }
+}
 
 // TypeScript interfaces and types for NavbarPage
 export interface NavbarElements {
@@ -41,8 +57,13 @@ export interface NotificationConfig {
 }
 
 export type NavbarEventHandler = (event: Event) => void;
-export type NavigationRoute = '/' | '/profile' | '/login' | '/register';
+export type NavigationRoute = '/' | '/feed' | '/profile' | '/register';
 export type NavbarTheme = 'light' | 'dark' | 'auto';
+
+interface SearchResult {
+  type: 'post' | 'user';
+  data: NoroffPost | any; // Use NoroffPost here too
+}
 
 export default function NavbarPage() {
   const userLoggedIn = isLoggedIn();
@@ -128,9 +149,52 @@ export default function NavbarPage() {
 }
 
 /**
- * Initialize navbar functionality
- * Sets up event listeners for navigation and search
+ * Enhanced search function - now properly typed
  */
+async function enhancedSearch(query: string): Promise<SearchResult[]> {
+  const results: SearchResult[] = [];
+
+  try {
+    // Search for posts
+    const postsResponse = await getAllPosts(50, 1);
+    const matchingPosts: NoroffPost[] = postsResponse.data.filter(
+      (post: NoroffPost) =>
+        post.title.toLowerCase().includes(query.toLowerCase()) ||
+        post.body.toLowerCase().includes(query.toLowerCase()) ||
+        post.author.name.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // Add unique users from matching posts
+    const uniqueUsers = new Map();
+    matchingPosts.forEach((post: NoroffPost) => {
+      if (post.author.name.toLowerCase().includes(query.toLowerCase())) {
+        uniqueUsers.set(post.author.name, post.author);
+      }
+    });
+
+    // Add user results
+    uniqueUsers.forEach((user) => {
+      results.push({
+        type: 'user',
+        data: user,
+      });
+    });
+
+    // Add post results
+    matchingPosts.forEach((post: NoroffPost) => {
+      results.push({
+        type: 'post',
+        data: post,
+      });
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+  }
+
+  return results;
+}
+
+// Rest of the file remains exactly the same...
 export function initNavbar() {
   // Navigation event listeners
   const feedBtn = document.getElementById('nav-feed');
@@ -147,8 +211,8 @@ export function initNavbar() {
   if (feedBtn) {
     feedBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      history.pushState({ path: '/' }, '', '/');
-      renderRoute('/');
+      history.pushState({ path: '/feed' }, '', '/feed');
+      renderRoute('/feed');
     });
   }
 
@@ -165,8 +229,8 @@ export function initNavbar() {
   if (loginBtn) {
     loginBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      history.pushState({ path: '/login' }, '', '/login');
-      renderRoute('/login');
+      history.pushState({ path: '/' }, '', '/');
+      renderRoute('/');
     });
   }
 
@@ -183,7 +247,7 @@ export function initNavbar() {
         // Update navbar to show login button
         updateNavbarAfterLogout();
 
-        // Navigate to feed page
+        // Navigate to login page
         history.pushState({ path: '/' }, '', '/');
         renderRoute('/');
 
@@ -193,22 +257,77 @@ export function initNavbar() {
     });
   }
 
-  // Search functionality
+  // Enhanced Search functionality
   if (searchBtn && searchInput) {
-    const handleSearch = () => {
-      const query = searchInput.value.trim();
-      if (query) {
-        console.log('Searching for:', query);
-        // TODO: Implement search functionality
-        // This could navigate to a search results page or filter current content
+    // Load posts for search functionality
+    const loadPostsForSearch = async () => {
+      try {
+        if (isLoggedIn()) {
+          // Authenticated users get personalized posts
+          await getAllPosts(100, 1);
+        } else {
+          // Unauthenticated users get public posts
+          await getPublicPosts(100, 1);
+        }
+        // We don't need to store posts here since enhancedSearch makes its own API calls
+      } catch (error) {
+        console.error('Error loading posts for search:', error);
       }
     };
 
-    searchBtn.addEventListener('click', handleSearch);
+    // Load posts when page loads
+    loadPostsForSearch();
 
+    // Enhanced search input handler
+    const handleSearchInput = async (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const searchTerm = target.value.toLowerCase().trim();
+
+      if (searchTerm === '') {
+        // Clear search - trigger reload of original feed
+        (window as any).searchQuery = null;
+        if (window.location.pathname === '/feed') {
+          renderRoute('/feed');
+        }
+        return;
+      }
+
+      // Use enhanced search
+      const searchResults = await enhancedSearch(searchTerm);
+
+      // Separate users and posts
+      const userResults = searchResults.filter((r) => r.type === 'user');
+      const postResults = searchResults.filter((r) => r.type === 'post');
+
+      // Store results globally
+      (window as any).searchQuery = searchTerm;
+      (window as any).searchResults = postResults.map((r) => r.data);
+      (window as any).userResults = userResults.map((r) => r.data);
+
+      // Navigate to feed to show results
+      if (window.location.pathname !== '/feed') {
+        history.pushState({ path: '/feed' }, '', '/feed');
+      }
+      renderRoute('/feed');
+    };
+
+    // Enhanced search button handler
+    const handleSearchClick = () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        const syntheticEvent = { target: searchInput } as unknown as Event;
+        handleSearchInput(syntheticEvent);
+      }
+    };
+
+    // Add event listeners
+    searchInput.addEventListener('input', handleSearchInput);
+    searchBtn.addEventListener('click', handleSearchClick);
+
+    // Enhanced keyboard shortcuts
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        handleSearch();
+        handleSearchClick();
       }
     });
   }
@@ -221,6 +340,9 @@ export function initNavbar() {
     });
   }
 
+  // Enhanced Global Event Listeners
+  setupGlobalEventListeners(searchInput);
+
   // Update active navigation based on current path
   updateActiveNav();
 
@@ -229,9 +351,84 @@ export function initNavbar() {
   (window as any).updateNavbarAfterLogout = updateNavbarAfterLogout;
 }
 
-/**
- * Update active navigation button based on current path
- */
+function setupGlobalEventListeners(searchInput: HTMLInputElement | null) {
+  // Enhanced Event Listeners
+  document.addEventListener('click', function (e) {
+    // Close dropdowns when clicking outside
+    if (!e.target || !(e.target as Element).closest('.dropdown')) {
+      document.querySelectorAll('.dropdown-content').forEach((dropdown) => {
+        dropdown.classList.remove('show');
+      });
+    }
+
+    // Close modals when clicking outside
+    if ((e.target as Element).classList?.contains('modal')) {
+      if (typeof (window as any).closeModal === 'function') {
+        (window as any).closeModal();
+      }
+      if (typeof (window as any).closeEditModal === 'function') {
+        (window as any).closeEditModal();
+      }
+    }
+  });
+
+  // Enhanced Keyboard shortcuts
+  document.addEventListener('keydown', function (e) {
+    // Ctrl/Cmd + K for search focus
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
+
+    // Escape to clear search and close modals
+    if (e.key === 'Escape') {
+      // Clear search
+      if (searchInput && document.activeElement === searchInput) {
+        searchInput.value = '';
+        searchInput.blur();
+        // Clear search results
+        (window as any).searchQuery = null;
+        if (window.location.pathname === '/feed') {
+          renderRoute('/feed');
+        }
+      }
+
+      // Close modals
+      if (typeof (window as any).closeModal === 'function') {
+        (window as any).closeModal();
+      }
+      if (typeof (window as any).closeEditModal === 'function') {
+        (window as any).closeEditModal();
+      }
+
+      // Close dropdowns
+      document.querySelectorAll('.dropdown-content').forEach((dropdown) => {
+        dropdown.classList.remove('show');
+      });
+    }
+
+    // Ctrl/Cmd + Enter to submit post
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement?.id === 'newPostContent') {
+        if (typeof (window as any).createPost === 'function') {
+          (window as any).createPost();
+        }
+      } else if (activeElement?.id === 'editPostContent') {
+        const editForm = document.getElementById(
+          'editPostForm'
+        ) as HTMLFormElement;
+        if (editForm) {
+          editForm.dispatchEvent(new Event('submit'));
+        }
+      }
+    }
+  });
+}
+
 function updateActiveNav() {
   const currentPath = window.location.pathname;
   const navButtons = document.querySelectorAll('.nav-btn');
@@ -240,19 +437,15 @@ function updateActiveNav() {
   navButtons.forEach((btn) => btn.classList.remove('active'));
 
   // Add active class to current page button
-  if (currentPath === '/' || currentPath === '/feed') {
+  if (currentPath === '/feed') {
     document.getElementById('nav-feed')?.classList.add('active');
   } else if (currentPath === '/profile') {
     document.getElementById('nav-profile')?.classList.add('active');
-  } else if (currentPath === '/login') {
+  } else if (currentPath === '/') {
     document.getElementById('nav-login')?.classList.add('active');
   }
 }
 
-/**
- * Update navbar after user logs out
- * Replaces logout button with login button
- */
 function updateNavbarAfterLogout() {
   const navContainer = document.querySelector('.navbar-nav');
   if (navContainer) {
@@ -271,9 +464,6 @@ function updateNavbarAfterLogout() {
   }
 }
 
-/**
- * Show logout success message
- */
 function showLogoutMessage() {
   // Create temporary notification
   const notification = document.createElement('div');

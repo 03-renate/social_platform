@@ -114,25 +114,25 @@ export default async function LoginPage() {
               // Provide more specific error messages based on API response
               if (errorMessage.toLowerCase().includes('email')) {
                 formError.textContent =
-                  '❌ Email address not found. Please check your email or register for an account.';
+                  ' Email address not found. Please check your email or register for an account.';
               } else if (errorMessage.toLowerCase().includes('password')) {
                 formError.textContent =
-                  '❌ Incorrect password. Please check your password and try again.';
+                  ' Incorrect password. Please check your password and try again.';
               } else if (
                 errorMessage.toLowerCase().includes('user') &&
                 errorMessage.toLowerCase().includes('not')
               ) {
                 formError.textContent =
-                  '❌ No account found with this email. Please register first.';
+                  ' No account found with this email. Please register first.';
               } else if (errorMessage.toLowerCase().includes('invalid')) {
                 formError.textContent =
-                  '❌ Invalid login credentials. Please check your email and password.';
+                  ' Invalid login credentials. Please check your email and password.';
               } else if (errorMessage.toLowerCase().includes('credentials')) {
                 formError.textContent =
-                  '❌ Invalid email or password. Please double-check your credentials.';
+                  ' Invalid email or password. Please double-check your credentials.';
               } else {
                 // Show the original API error message if we can't categorize it
-                formError.textContent = `❌ ${errorMessage}`;
+                formError.textContent = ` ${errorMessage}`;
               }
             }
           } else if (result.data) {
@@ -169,10 +169,10 @@ export default async function LoginPage() {
               (window as any).refreshNavbar();
             }
 
-            // Redirect to home page
+            // Redirect to feed page
             setTimeout(() => {
-              history.pushState({ path: '/' }, '', '/');
-              renderRoute('/');
+              history.pushState({ path: '/feed' }, '', '/feed');
+              renderRoute('/feed');
             }, 1500);
           } else {
             // Unexpected response format
@@ -223,7 +223,7 @@ export default async function LoginPage() {
         <div class="auth-container">
             <div class="auth-card">
                 <h1>Welcome Back</h1>
-                <div id="loginMessage" style="margin-bottom: 1rem; text-align: center; font-weight: 500;"></div>
+                <div id="loginMessage" class="auth-message"></div>
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="loginEmail">Email Address</label>
@@ -233,14 +233,14 @@ export default async function LoginPage() {
                         <label for="loginPassword">Password</label>
                         <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                    <button type="submit" class="btn btn-primary auth-submit-btn">
                         🚀 Sign In
                     </button>
                 </form>
                 
-                <div class="login-tips" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
-                    <div style="color: #94a3b8; margin-bottom: 0.5rem;"><strong>💡 Login Tips:</strong></div>
-                    <ul style="color: #64748b; margin: 0; padding-left: 1.2rem;">
+                <div class="login-tips">
+                    <div class="login-tips-title"><strong>💡 Login Tips:</strong></div>
+                    <ul>
                         <li>Use your @stud.noroff.no email address</li>
                         <li>Password must be at least 8 characters</li>
                         <li>Make sure you've registered an account first</li>

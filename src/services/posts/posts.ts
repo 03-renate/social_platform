@@ -1,10 +1,9 @@
 /**
  * @file posts.ts
- * @description Posts service for fetching and managing social media posts from Noroff API
- * @author [Your Name]
+ * @description Service layer for fetching and managing social media posts (CRUD) from Noroff API v2
  */
 
-import { get } from '../api/client';
+import { get, post, put, del } from '../api/client';
 
 // Define the Post interface according to Noroff API v2 structure
 export interface NoroffPost {
@@ -50,11 +49,14 @@ export interface PostsApiResponse {
   };
 }
 
+const BASE_URL = '/social/posts';
+
+/* -------------------------------------------------------------------------- */
+/*                                READ METHODS                                */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Fetch all posts from the Noroff Social API
- * @param limit Number of posts to fetch (default: 50)
- * @param page Page number (default: 1)
- * @returns Promise with posts data
  */
 export async function getAllPosts(
   limit: number = 50,
@@ -69,11 +71,7 @@ export async function getAllPosts(
       _comments: 'true',
     });
 
-    const response = await get<PostsApiResponse>(
-      `/social/posts?${queryParams.toString()}`
-    );
-
-    return response;
+    return await get<PostsApiResponse>(`${BASE_URL}?${queryParams.toString()}`);
   } catch (error) {
     console.error('Error fetching posts:', error);
     throw error;
@@ -81,16 +79,24 @@ export async function getAllPosts(
 }
 
 /**
+ * Fetch posts for public viewing without authentication
+ */
+export async function getPublicPosts(
+  limit: number = 50,
+  page: number = 1
+): Promise<PostsApiResponse> {
+  console.log('Loading sample posts for public viewing');
+  return getSamplePosts(limit, page);
+}
+
+/**
  * Fetch a single post by ID
- * @param id Post ID
- * @returns Promise with single post data
  */
 export async function getPostById(id: number): Promise<NoroffPost> {
   try {
     const response = await get<{ data: NoroffPost }>(
-      `/social/posts/${id}?_author=true&_reactions=true&_comments=true`
+      `${BASE_URL}/${id}?_author=true&_reactions=true&_comments=true`
     );
-
     return response.data;
   } catch (error) {
     console.error('Error fetching post by ID:', error);
@@ -100,9 +106,6 @@ export async function getPostById(id: number): Promise<NoroffPost> {
 
 /**
  * Search posts by query
- * @param query Search query
- * @param limit Number of posts to fetch (default: 20)
- * @returns Promise with matching posts
  */
 export async function searchPosts(
   query: string,
@@ -116,13 +119,157 @@ export async function searchPosts(
       _reactions: 'true',
     });
 
-    const response = await get<PostsApiResponse>(
-      `/social/posts/search?${queryParams.toString()}`
+    return await get<PostsApiResponse>(
+      `${BASE_URL}/search?${queryParams.toString()}`
     );
-
-    return response;
   } catch (error) {
     console.error('Error searching posts:', error);
     throw error;
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               WRITE METHODS                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Create a new post
+ */
+export async function createPost(payload: {
+  title: string;
+  body: string;
+  tags?: string[];
+  media?: { url: string; alt?: string };
+}): Promise<NoroffPost> {
+  const response = await post(BASE_URL, {
+    ...payload,
+    tags: payload.tags && payload.tags.length > 0 ? payload.tags : [],
+  });
+
+  const newPost = (response as any).data || response;
+
+  // ✅ Normalize missing fields so UI doesn’t crash
+  return {
+    ...newPost,
+    tags: newPost.tags || [],
+    _count: newPost._count || { comments: 0, reactions: 0 },
+    reactions: newPost.reactions || [],
+    author: {
+      ...newPost.author,
+      avatar: newPost.author?.avatar || { url: '', alt: '' },
+    },
+  };
+}
+
+/**
+ * Update an existing post
+ */
+export async function updatePost(
+  postId: number,
+  payload: {
+    title?: string;
+    body?: string;
+    tags?: string[];
+    media?: { url: string; alt?: string };
+  }
+): Promise<NoroffPost> {
+  const response = await put(`${BASE_URL}/${postId}`, payload);
+  return (response as any).data || response;
+}
+
+/**
+ * Delete a post
+ */
+export async function deletePost(postId: number): Promise<void> {
+  return del(`${BASE_URL}/${postId}`);
+}
+
+/**
+ * Add a comment to a post
+ */
+export async function addComment(postId: number, body: string) {
+  return post(`${BASE_URL}/${postId}/comment`, { body });
+}
+
+/**
+ * Reply to a comment
+ */
+export async function replyToComment(
+  postId: number,
+  parentCommentId: number,
+  body: string
+) {
+  return post(`${BASE_URL}/${postId}/comment`, {
+    body,
+    replyToId: parentCommentId,
+  });
+}
+
+/**
+ * React to a post with an emoji
+ */
+export async function reactToPost(postId: number, symbol: string) {
+  return put(`${BASE_URL}/${postId}/react/${symbol}`, {});
+}
+
+/**
+ * Remove reaction from a post
+ */
+export async function removeReaction(postId: number, symbol: string) {
+  return del(`${BASE_URL}/${postId}/react/${symbol}`);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          SAMPLE POSTS (Public View)                        */
+/* -------------------------------------------------------------------------- */
+
+function getSamplePosts(limit: number, page: number): PostsApiResponse {
+  const samplePosts: NoroffPost[] = [
+    {
+      id: 1,
+      title: 'Welcome to Social Platform',
+      body: 'Explore and connect with people around the world. Share your thoughts, experiences, and discover new content every day.',
+      tags: ['welcome', 'social', 'community'],
+      media: {
+        url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
+        alt: 'People connecting',
+      },
+      created: new Date(Date.now() - 86400000).toISOString(),
+      updated: new Date(Date.now() - 86400000).toISOString(),
+      author: {
+        name: 'social_admin',
+        email: 'admin@social.com',
+        bio: 'Official Social Platform Account',
+        avatar: {
+          url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e',
+          alt: 'Admin avatar',
+        },
+      },
+      _count: {
+        comments: 12,
+        reactions: 45,
+      },
+      reactions: [
+        { symbol: '👍', count: 28 },
+        { symbol: '❤️', count: 17 },
+      ],
+    },
+  ];
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedPosts = samplePosts.slice(startIndex, endIndex);
+
+  return {
+    data: paginatedPosts,
+    meta: {
+      currentPage: page,
+      pageCount: Math.ceil(samplePosts.length / limit),
+      totalCount: samplePosts.length,
+      isFirstPage: page === 1,
+      isLastPage: page >= Math.ceil(samplePosts.length / limit),
+      previousPage: page > 1 ? page - 1 : null,
+      nextPage: page < Math.ceil(samplePosts.length / limit) ? page + 1 : null,
+    },
+  };
 }

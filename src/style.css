@@ -1637,30 +1637,10 @@ body {
   font-weight: 600;
 }
 
-.follow-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
-  color: var(--text-muted);
-  box-shadow: none;
-}
-
-.follow-btn:disabled:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .profile-content {
   padding: 0 2rem 2rem;
   position: relative;
-  margin-top: -60px; 
+  margin-top: -60px;
   z-index: 3;
 }
 
@@ -2127,7 +2107,6 @@ body {
   left: 18px;
   animation: helmet-glint 4s ease-in-out infinite;
 }
-
 
 .arm {
   width: 15px;
@@ -2615,7 +2594,7 @@ body {
   border-radius: 16px;
   padding: 1.75rem;
   margin: 1.5rem 0;
-  width: 100%; 
+  width: 100%;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition:

@@ -1570,21 +1570,29 @@ body {
 
 /* Search Results Styling */
 .search-results-info {
-  background: var(--bg-card);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
   border: 1px solid var(--primary-color);
-  border-radius: var(--border-radius);
-  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem 1.5rem;
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  animation: fadeInUp 0.6s ease-out;
 }
 
-.search-results-info p {
-  margin: 0;
+.search-info-text {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   color: var(--text-primary);
   font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.search-icon {
+  font-size: 1.1rem;
 }
 
 .clear-search-btn {
@@ -1595,14 +1603,63 @@ body {
   border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: var(--transition);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .clear-search-btn:hover {
   background: var(--secondary-color);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.clear-search-btn svg {
+  flex-shrink: 0;
+}
+
+/* Live search loading states */
+.search-input.searching {
+  background: var(--bg-glass) !important;
+  opacity: 0.7 !important;
+  position: relative;
+}
+
+.search-input.searching::after {
+  content: '';
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--primary-color);
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Mobile responsive search results */
+@media (max-width: 768px) {
+  .search-results-info {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .search-info-text {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .clear-search-btn {
+    align-self: center;
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 /* Search notification animations */

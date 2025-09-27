@@ -194,84 +194,96 @@ export function initNavbar() {
     });
   }
 
-  // Search functionality
+  // Search functionality - Real-time search as you type
   if (searchBtn && searchInput) {
     const searchButton = searchBtn as HTMLButtonElement;
+    let searchTimeout: NodeJS.Timeout;
     
-    const handleSearch = async () => {
-      const query = searchInput.value.trim();
-      if (query) {
-        // Show loading state
-        searchButton.disabled = true;
-        searchButton.innerHTML = `
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        `;
-
-        try {
-          // Perform the search
-          const searchResults = await searchPosts(query, 20);
-          
-          if (searchResults.data && searchResults.data.length > 0) {
-            // Navigate to feed page with search results
-            // Store search results globally for the feed page to use
-            (window as any).searchResults = {
-              query: query,
-              results: searchResults.data,
-              timestamp: Date.now()
-            };
-            
-            // Navigate to feed page with search parameter
-            const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
-            history.pushState({ path: searchUrl }, '', searchUrl);
-            renderRoute('/feed');
-            
-            // Clear the search input
-            searchInput.value = '';
-            
-            // Show success message briefly
-            showSearchMessage(`Found ${searchResults.data.length} results for "${query}"`, 'success');
-          } else {
-            // No results found
-            showSearchMessage(`No results found for "${query}"`, 'info');
-          }
-        } catch (error) {
-          console.error('Search error:', error);
-          showSearchMessage('Search failed. Please try again.', 'error');
-        } finally {
-          // Reset search button
-          searchButton.disabled = false;
-          searchButton.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          `;
-        }
-      }
-    };
-
-    searchButton.addEventListener('click', handleSearch);
-
-    searchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        handleSearch();
-      }
-    });
-
-    // Clear search results when input is cleared
-    searchInput.addEventListener('input', () => {
-      if (searchInput.value.trim() === '') {
-        // Clear any stored search results
+    // Real-time search as user types
+    const performLiveSearch = async (query: string) => {
+      if (query.length === 0) {
+        // Clear search results and go back to regular feed
         if ((window as any).searchResults) {
           delete (window as any).searchResults;
-          // If we're on feed page with search params, reload without search
-          const currentUrl = new URL(window.location.href);
-          if (currentUrl.pathname === '/feed' && currentUrl.searchParams.has('search')) {
+          if (window.location.pathname === '/feed') {
             history.pushState({ path: '/feed' }, '', '/feed');
             renderRoute('/feed');
           }
+        }
+        return;
+      }
+
+      if (query.length < 2) {
+        // Don't search for very short queries
+        return;
+      }
+
+      try {
+        // Show loading state in search input
+        searchInput.style.background = 'var(--bg-glass)';
+        searchInput.style.opacity = '0.7';
+
+        // Perform the search
+        const searchResults = await searchPosts(query, 50);
+        
+        if (searchResults.data) {
+          // Store search results globally for the feed page to use
+          (window as any).searchResults = {
+            query: query,
+            results: searchResults.data,
+            timestamp: Date.now()
+          };
+          
+          // If we're on feed page, update it with search results
+          if (window.location.pathname === '/feed') {
+            const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+            history.pushState({ path: searchUrl }, '', searchUrl);
+            renderRoute('/feed');
+          } else {
+            // Navigate to feed page with search results
+            const searchUrl = `/feed?search=${encodeURIComponent(query)}`;
+            history.pushState({ path: searchUrl }, '', searchUrl);
+            renderRoute('/feed');
+          }
+        }
+      } catch (error) {
+        console.error('Live search error:', error);
+      } finally {
+        // Reset search input appearance
+        searchInput.style.background = '';
+        searchInput.style.opacity = '';
+      }
+    };
+
+    // Handle input changes with debouncing
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+      
+      // Clear previous timeout
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+      
+      // Set new timeout for search (300ms delay)
+      searchTimeout = setTimeout(() => {
+        performLiveSearch(query);
+      }, 300);
+    });
+
+    // Handle search button click
+    searchButton.addEventListener('click', () => {
+      const query = searchInput.value.trim();
+      if (query) {
+        performLiveSearch(query);
+      }
+    });
+
+    // Handle Enter key
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const query = searchInput.value.trim();
+        if (query) {
+          performLiveSearch(query);
         }
       }
     });

@@ -42,8 +42,17 @@ export default async function FeedPage(): Promise<string> {
       isSearchResults = true;
       searchResultsInfo = `
         <div class="search-results-info">
-          <p>🔍 Search results for "<strong>${searchQuery}</strong>" (${posts.length} results found)</p>
-          <button class="clear-search-btn" onclick="clearSearch()">Clear Search</button>
+          <div class="search-info-text">
+            <span class="search-icon">🔍</span>
+            <span>Showing <strong>${posts.length} results</strong> for "<strong>${searchQuery}</strong>"</span>
+          </div>
+          <button class="clear-search-btn" onclick="clearSearch()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Clear
+          </button>
         </div>
       `;
     } else {

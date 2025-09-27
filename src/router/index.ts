@@ -21,6 +21,10 @@ const PATHS = {
     url: '/',
     component: LoginPage,
   },
+  loginAlt: {
+    url: '/login',
+    component: LoginPage,
+  },
   feed: {
     url: '/feed',
     component: FeedPage,
@@ -72,7 +76,7 @@ export default async function router(
       // Redirect to login page
       history.pushState({ path: '/' }, '', '/');
       html = await LoginPage();
-    } else if (currentPath === '/' && isLoggedIn()) {
+    } else if ((currentPath === '/' || currentPath === '/login') && isLoggedIn()) {
       // If user is logged in and tries to access login page, redirect to feed
       history.pushState({ path: '/feed' }, '', '/feed');
       html = await FeedPage();

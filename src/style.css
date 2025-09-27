@@ -1621,26 +1621,7 @@ body {
   flex-shrink: 0;
 }
 
-/* Live search loading states */
-.search-input.searching {
-  background: var(--bg-glass) !important;
-  opacity: 0.7 !important;
-  position: relative;
-}
 
-.search-input.searching::after {
-  content: '';
-  position: absolute;
-  right: 45px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--primary-color);
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
 
 /* Mobile responsive search results */
 @media (max-width: 768px) {
@@ -1662,28 +1643,7 @@ body {
   }
 }
 
-/* Search notification animations */
-@keyframes slideInFromRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
 
-@keyframes slideOutToRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
 
 /* No Posts State */
 .no-posts {

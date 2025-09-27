@@ -373,49 +373,11 @@ function handleLikeClick(event: Event): void {
   console.log('Liked post:', postId);
 }
 
-/**
- * Handle comment button clicks
- */
-function handleCommentClick(event: Event): void {
-  const button = event.currentTarget as HTMLElement;
-  const postId = button.dataset.postId;
 
-  // TODO: Implement comment functionality
-  console.log('Comment on post:', postId);
-}
 
-/**
- * Handle share button clicks
- */
-function handleShareClick(event: Event): void {
-  const button = event.currentTarget as HTMLElement;
-  const postId = button.dataset.postId;
 
-  // Simple share functionality
-  if (navigator.share) {
-    navigator.share({
-      title: 'Check out this post',
-      url: window.location.href,
-    });
-  } else {
-    // Fallback - copy to clipboard
-    navigator.clipboard.writeText(window.location.href);
-    alert('Link copied to clipboard!');
-  }
 
-  console.log('Shared post:', postId);
-}
 
-/**
- * Handle read more button clicks
- */
-function handleReadMoreClick(event: Event): void {
-  const button = event.currentTarget as HTMLElement;
-  const postId = button.dataset.postId;
-
-  // TODO: Implement full post view
-  console.log('Read more for post:', postId);
-}
 
 /**
  * Handle comment toggle (show/hide comments section)

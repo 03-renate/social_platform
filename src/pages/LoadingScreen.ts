@@ -54,7 +54,6 @@ export default class LoadingScreen {
     if (loadingScreen) {
       loadingScreen.classList.remove('hidden');
 
-      // Add floating elements animation
       this.animateFloatingElements();
     }
   }

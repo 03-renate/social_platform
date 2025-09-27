@@ -391,13 +391,13 @@ function initializeFeedInteractions(): void {
 
   // Define missing navigation functions
   if (!window.navigateToProfile) {
-    (window as any).navigateToProfile = function(username: string) {
+    (window as any).navigateToProfile = function (username: string) {
       window.location.href = `/profile?user=${username}`;
     };
   }
 
   if (!window.navigateToPage) {
-    (window as any).navigateToPage = function(page: number) {
+    (window as any).navigateToPage = function (page: number) {
       const url = new URL(window.location.href);
       url.searchParams.set('page', page.toString());
       window.location.href = url.toString();
@@ -718,71 +718,6 @@ async function loadComments(postId: number): Promise<void> {
     '<div class="no-comments">No comments yet. Be the first to comment!</div>';
 }
 
-function renderCommentHTML(
-  comment: any,
-  postId: number,
-  index: number
-): string {
-  const timeAgo = getTimeAgo(new Date(comment.created));
-  const currentUserName = getLocalItem('user');
-  const isOwner = currentUserName && comment.author.name === currentUserName;
-
-  return `
-    <div class="comment-item" data-comment-id="${comment.id}" style="animation-delay: ${index * 0.1}s">
-      <div class="comment-avatar" onclick="navigateToProfile('${comment.author.name}')" style="cursor: pointer;">
-        ${
-          comment.author.avatar?.url
-            ? `<img src="${comment.author.avatar.url}" alt="${comment.author.avatar.alt || comment.author.name}" class="comment-avatar-img">`
-            : `<div class="comment-avatar-placeholder">${comment.author.name.charAt(0).toUpperCase()}</div>`
-        }
-      </div>
-      <div class="comment-content">
-        <div class="comment-header">
-          <span class="comment-author">
-            <a href="/profile?user=${comment.author.name}" 
-               class="author-link" 
-               onclick="event.preventDefault(); navigateToProfile('${comment.author.name}')">
-              ${comment.author.name}
-            </a>
-          </span>
-          <span class="comment-time">${timeAgo}</span>
-        </div>
-        <div class="comment-text">${comment.body}</div>
-        <div class="comment-actions">
-          <button class="comment-action-btn reply-btn" onclick="startReply(${postId}, ${comment.id}, '${comment.author.name}')">
-            💬 Reply
-          </button>
-          ${
-            isOwner
-              ? `
-            <button class="comment-action-btn delete-btn" onclick="deleteCommentFunction(${postId}, ${comment.id})">
-              🗑️ Delete
-            </button>
-          `
-              : ''
-          }
-        </div>
-        
-        <!-- Reply form (hidden by default) -->
-        <div class="reply-form" id="reply-form-${comment.id}" style="display: none;">
-          <div class="reply-input-container">
-            <input 
-              type="text" 
-              id="reply-input-${comment.id}" 
-              class="reply-input" 
-              placeholder="Write a reply..."
-              maxlength="280"
-              onkeypress="if(event.key === 'Enter') submitReply(${postId}, ${comment.id})"
-            >
-            <button class="reply-submit-btn" onclick="submitReply(${postId}, ${comment.id})">Send</button>
-            <button class="reply-cancel-btn" onclick="cancelReply(${comment.id})">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 async function submitComment(postId: number): Promise<void> {
   const input = document.getElementById(
     `comment-input-${postId}`
@@ -896,7 +831,7 @@ function addCommentToUI(postId: number, comment: any): void {
         </div>
         <div class="comment-text">${comment.body}</div>
         <div class="comment-actions">
-          <button class="comment-action-btn reply-btn" onclick="startReply(${postId}, ${comment.id}, '${comment.author.name}')">
+          <button class="comment-action-btn reply-btn" onclick="startReply(${comment.id}, '${comment.author.name}')">
             Reply
           </button>
           ${
@@ -937,11 +872,7 @@ function addCommentToUI(postId: number, comment: any): void {
 /*                            Reply Functionality                             */
 /* -------------------------------------------------------------------------- */
 
-function startReply(
-  postId: number,
-  commentId: number,
-  authorName: string
-): void {
+function startReply(commentId: number, authorName: string): void {
   // Hide all other reply forms
   document.querySelectorAll('.reply-form').forEach((form) => {
     (form as HTMLElement).style.display = 'none';
@@ -1261,19 +1192,4 @@ function showNotification(
       }
     }, 300);
   }, 3000);
-}
-
-function getTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInSeconds = Math.floor(diffInMs / 1000);
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  if (diffInDays < 7) return `${diffInDays}d ago`;
-  return date.toLocaleDateString();
 }

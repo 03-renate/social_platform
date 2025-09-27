@@ -12,6 +12,17 @@ import {
   type NoroffPost,
 } from '../services/posts/posts';
 
+// Add the global window interface to actually USE the NoroffPost type
+declare global {
+  interface Window {
+    searchQuery?: string;
+    searchResults?: NoroffPost[]; // This uses the imported type
+    userResults?: any[];
+    navigateToProfile?: (username: string) => void;
+    navigateToPage?: (page: number) => void;
+  }
+}
+
 // TypeScript interfaces and types for NavbarPage
 export interface NavbarElements {
   feedBtn: HTMLElement | null;
@@ -51,7 +62,7 @@ export type NavbarTheme = 'light' | 'dark' | 'auto';
 
 interface SearchResult {
   type: 'post' | 'user';
-  data: any;
+  data: NoroffPost | any; // Use NoroffPost here too
 }
 
 export default function NavbarPage() {
@@ -138,7 +149,7 @@ export default function NavbarPage() {
 }
 
 /**
- * Enhanced search function
+ * Enhanced search function - now properly typed
  */
 async function enhancedSearch(query: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
@@ -146,8 +157,8 @@ async function enhancedSearch(query: string): Promise<SearchResult[]> {
   try {
     // Search for posts
     const postsResponse = await getAllPosts(50, 1);
-    const matchingPosts = postsResponse.data.filter(
-      (post) =>
+    const matchingPosts: NoroffPost[] = postsResponse.data.filter(
+      (post: NoroffPost) =>
         post.title.toLowerCase().includes(query.toLowerCase()) ||
         post.body.toLowerCase().includes(query.toLowerCase()) ||
         post.author.name.toLowerCase().includes(query.toLowerCase())
@@ -155,7 +166,7 @@ async function enhancedSearch(query: string): Promise<SearchResult[]> {
 
     // Add unique users from matching posts
     const uniqueUsers = new Map();
-    matchingPosts.forEach((post) => {
+    matchingPosts.forEach((post: NoroffPost) => {
       if (post.author.name.toLowerCase().includes(query.toLowerCase())) {
         uniqueUsers.set(post.author.name, post.author);
       }
@@ -170,7 +181,7 @@ async function enhancedSearch(query: string): Promise<SearchResult[]> {
     });
 
     // Add post results
-    matchingPosts.forEach((post) => {
+    matchingPosts.forEach((post: NoroffPost) => {
       results.push({
         type: 'post',
         data: post,
@@ -183,10 +194,7 @@ async function enhancedSearch(query: string): Promise<SearchResult[]> {
   return results;
 }
 
-/**
- * Initialize navbar functionality
- * Sets up event listeners for navigation and search
- */
+// Rest of the file remains exactly the same...
 export function initNavbar() {
   // Navigation event listeners
   const feedBtn = document.getElementById('nav-feed');
@@ -251,30 +259,26 @@ export function initNavbar() {
 
   // Enhanced Search functionality
   if (searchBtn && searchInput) {
-    let allPosts: NoroffPost[] = [];
-
     // Load posts for search functionality
     const loadPostsForSearch = async () => {
       try {
-        let postsResponse;
         if (isLoggedIn()) {
           // Authenticated users get personalized posts
-          postsResponse = await getAllPosts(100, 1);
+          await getAllPosts(100, 1);
         } else {
           // Unauthenticated users get public posts
-          postsResponse = await getPublicPosts(100, 1);
+          await getPublicPosts(100, 1);
         }
-        allPosts = postsResponse.data;
+        // We don't need to store posts here since enhancedSearch makes its own API calls
       } catch (error) {
         console.error('Error loading posts for search:', error);
-        allPosts = [];
       }
     };
 
     // Load posts when page loads
     loadPostsForSearch();
 
-    // Enhanced search input handler - ACTUALLY USE THIS FUNCTION
+    // Enhanced search input handler
     const handleSearchInput = async (e: Event) => {
       const target = e.target as HTMLInputElement;
       const searchTerm = target.value.toLowerCase().trim();
@@ -316,7 +320,7 @@ export function initNavbar() {
       }
     };
 
-    // Add event listeners - ACTUALLY USE THE FUNCTION
+    // Add event listeners
     searchInput.addEventListener('input', handleSearchInput);
     searchBtn.addEventListener('click', handleSearchClick);
 
@@ -347,9 +351,6 @@ export function initNavbar() {
   (window as any).updateNavbarAfterLogout = updateNavbarAfterLogout;
 }
 
-/**
- * Setup enhanced global event listeners for keyboard shortcuts and interactions
- */
 function setupGlobalEventListeners(searchInput: HTMLInputElement | null) {
   // Enhanced Event Listeners
   document.addEventListener('click', function (e) {
@@ -428,9 +429,6 @@ function setupGlobalEventListeners(searchInput: HTMLInputElement | null) {
   });
 }
 
-/**
- * Update active navigation button based on current path
- */
 function updateActiveNav() {
   const currentPath = window.location.pathname;
   const navButtons = document.querySelectorAll('.nav-btn');
@@ -448,10 +446,6 @@ function updateActiveNav() {
   }
 }
 
-/**
- * Update navbar after user logs out
- * Replaces logout button with login button
- */
 function updateNavbarAfterLogout() {
   const navContainer = document.querySelector('.navbar-nav');
   if (navContainer) {
@@ -470,9 +464,6 @@ function updateNavbarAfterLogout() {
   }
 }
 
-/**
- * Show logout success message
- */
 function showLogoutMessage() {
   // Create temporary notification
   const notification = document.createElement('div');

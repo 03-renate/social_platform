@@ -75,7 +75,7 @@ export default async function ProfilePage(): Promise<string> {
       <div class="profile-page">
         <div class="profile-container">
           <!-- Profile Header -->
-          ${renderProfileHeader(profileData, isOwnProfile, currentUser)}
+          ${renderProfileHeader(profileData, isOwnProfile)}
           
           <!-- Profile Content -->
           <div class="profile-content">
@@ -213,8 +213,8 @@ async function unfollowUser(username: string): Promise<FollowResponse> {
 
 function renderProfileHeader(
   profile: ProfileWithFollowData,
-  isOwnProfile: boolean,
-  currentUser: string | null
+  isOwnProfile: boolean
+  // Remove the unused currentUser parameter
 ): string {
   const bannerUrl = profile.banner?.url || '';
 

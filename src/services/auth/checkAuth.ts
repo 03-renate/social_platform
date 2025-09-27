@@ -4,6 +4,7 @@
  * @author []
  */
 
+import { getLocalItem } from '../../utils/storage';
 // import { post } from "./apiClient.js";
 
 const ACCESS_TOKEN = 'accessToken';
@@ -14,7 +15,7 @@ const ACCESS_TOKEN = 'accessToken';
  *
  * @returns {boolean} Returns true if an access token exists, indicating the user is logged in; otherwise, false.
  */
-export function isUserLoggedIn() {
+export function isUserLoggedIn(): boolean {
   const token = localStorage.getItem(ACCESS_TOKEN);
   return !!token; // The !! converts a value to a strict boolean
 }
@@ -24,10 +25,11 @@ export function isUserLoggedIn() {
  * @param {object} _credentials The user's email and password.
  * @returns {Promise<object>} The user profile data.
  */
-export async function loginUser(_credentials) {
+export async function loginUser(_credentials: any): Promise<any> {
   // TODO: https://lms.noroff.no/mod/book/view.php?id=123585&chapterid=61404
+  throw new Error('Login functionality not implemented yet');
 }
 
-export function getAccessToken() {
+export function getAccessToken(): string | null {
   return getLocalItem(ACCESS_TOKEN);
 }

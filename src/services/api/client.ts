@@ -103,15 +103,21 @@ async function apiClient(endpoint: string, options: ApiClientOptions = {}) {
 export const get = <T = unknown>(endpoint: Endpoint): Promise<T> =>
   apiClient(endpoint);
 
-
+/**
+ * POST request with JSON body.
+ */
 export const post = (endpoint: Endpoint, body: object) =>
   apiClient(endpoint, { method: "POST", body });
 
-
+/**
+ * PUT request with JSON body.
+ */
 export const put = (endpoint: Endpoint, body: object) =>
   apiClient(endpoint, { method: "PUT", body });
 
-
+/**
+ * DELETE request.
+ */
 export const del = (endpoint: Endpoint) =>
   apiClient(endpoint, { method: "DELETE" });
 

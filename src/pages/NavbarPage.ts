@@ -12,10 +12,11 @@ import {
   type NoroffPost,
 } from '../services/posts/posts';
 
+// Add the global window interface to actually USE the NoroffPost type
 declare global {
   interface Window {
     searchQuery?: string;
-    searchResults?: NoroffPost[];
+    searchResults?: NoroffPost[]; // This uses the imported type
     userResults?: any[];
     navigateToProfile?: (username: string) => void;
     navigateToPage?: (page: number) => void;
@@ -61,7 +62,7 @@ export type NavbarTheme = 'light' | 'dark' | 'auto';
 
 interface SearchResult {
   type: 'post' | 'user';
-  data: NoroffPost | any; 
+  data: NoroffPost | any; // Use NoroffPost here too
 }
 
 export default function NavbarPage() {
@@ -148,7 +149,7 @@ export default function NavbarPage() {
 }
 
 /**
- * Search function that searches posts and users based on the query.
+ * Enhanced search function - now properly typed
  */
 async function enhancedSearch(query: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [];

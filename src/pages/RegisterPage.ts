@@ -115,7 +115,7 @@ export default async function RegisterPage() {
             name,
             email,
             password,
-            ...(bio && { bio }), 
+            ...(bio && { bio }), // Only include bio if it's provided
           };
 
           const result: ApiResponse<RegisterResponse> =

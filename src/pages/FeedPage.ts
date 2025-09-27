@@ -20,7 +20,7 @@ import {
 import { isLoggedIn } from '../utils/auth';
 import { getLocalItem } from '../utils/storage';
 
-
+// Add missing import for navigation function
 declare global {
   interface Window {
     searchQuery?: string;
@@ -888,6 +888,7 @@ function startReply(commentId: number, authorName: string): void {
     replyForm.style.display = 'block';
     replyInput.value = `@${authorName} `;
     replyInput.focus();
+    // Set cursor at end
     replyInput.setSelectionRange(
       replyInput.value.length,
       replyInput.value.length

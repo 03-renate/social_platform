@@ -1,5 +1,5 @@
 /**
- * Post card component with full CRUD functionality
+ * Enhanced Instagram-like post card component with full CRUD functionality
  * @param post Post object
  * @param animationDelay Animation delay in seconds (for animate.css) - use the index
  */

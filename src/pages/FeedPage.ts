@@ -1088,6 +1088,7 @@ function viewFullPost(postId: number): void {
   const postElement = document.getElementById(`post-${postId}`);
   if (!postElement) return;
 
+  // Extract post data
   const title =
     postElement.querySelector('.post-title-compact')?.textContent || '';
   const body = postElement.querySelector('.post-body')?.textContent || '';
@@ -1098,45 +1099,118 @@ function viewFullPost(postId: number): void {
   const mediaImg = postElement.querySelector(
     '.post-image-preview'
   ) as HTMLImageElement;
+  const tags = Array.from(postElement.querySelectorAll('.tag-compact'))
+    .map((tag) => tag.textContent?.replace('#', '') || '')
+    .filter((tag) => tag.length > 0);
+
+  // Get interaction counts
+  const likeCount =
+    postElement.querySelector('.like-btn .action-count-compact')?.textContent ||
+    '0';
+  const commentCount =
+    postElement.querySelector('.comment-btn .action-count-compact')
+      ?.textContent || '0';
+
+  // Get avatar
+  const avatarImg = postElement.querySelector(
+    '.avatar-img-small'
+  ) as HTMLImageElement;
+  const avatarUrl = avatarImg?.src || '';
 
   const fullPostContent = document.getElementById('fullPostContent');
   if (!fullPostContent) return;
 
   fullPostContent.innerHTML = `
-    <div class="full-post-view">
-      <div class="full-post-header">
-        <div class="author-info">
-          <div class="author-avatar">
-            ${author.charAt(0).toUpperCase()}
-          </div>
-          <div class="author-details">
-            <h4 class="author-name">${author}</h4>
-            <p class="post-time">${time}</p>
-          </div>
-        </div>
-      </div>
-      
+    <article class="full-post-card">
+      <!-- Post Media -->
       ${
         mediaImg
           ? `
         <div class="full-post-media">
-          <img src="${mediaImg.src}" alt="${mediaImg.alt}" style="width: 100%; border-radius: 8px; margin: 1rem 0;">
+          <img src="${mediaImg.src}" alt="${mediaImg.alt}" class="full-post-image">
         </div>
       `
           : ''
       }
-      
+
+      <!-- Post Header -->
+      <header class="full-post-header">
+        <div class="author-info">
+          <div class="author-avatar">
+            ${
+              avatarUrl
+                ? `<img src="${avatarUrl}" alt="${author}" class="avatar-img">`
+                : `<div class="avatar-placeholder">${author.charAt(0).toUpperCase()}</div>`
+            }
+          </div>
+          <div class="author-details">
+            <h4 class="author-name">
+              <a href="/profile?user=${author}" class="author-link" 
+                 onclick="event.preventDefault(); navigateToProfile('${author}')">
+                ${author}
+              </a>
+            </h4>
+            <p class="post-time">${time}</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Post Content -->
       <div class="full-post-content">
-        ${title ? `<h2>${title}</h2>` : ''}
-        <div class="post-text">${body}</div>
+        ${title ? `<h2 class="full-post-title">${title}</h2>` : ''}
+        <div class="full-post-text">${body}</div>
+        
+        ${
+          tags.length > 0
+            ? `
+          <div class="full-post-tags">
+            ${tags.map((tag) => `<span class="tag">#${tag}</span>`).join('')}
+          </div>
+        `
+            : ''
+        }
       </div>
-      
-      <div class="full-post-actions">
-        <button class="btn btn-secondary" onclick="toggleComments(${postId}); closeFullPostModal();">
-          View Comments
-        </button>
-      </div>
-    </div>
+
+      <!-- Post Actions -->
+      <footer class="full-post-actions">
+        <div class="action-buttons">
+          <!-- Like Button with Reactions -->
+          <div style="position: relative;">
+            <button 
+              class="action-btn like-btn" 
+              data-post-id="${postId}"
+              onclick="toggleReaction(${postId}, '❤️')"
+              onmouseenter="showReactionsModal(${postId})"
+              onmouseleave="hideReactionsModal(${postId})"
+            >
+              ❤️ <span class="action-count">${likeCount}</span>
+            </button>
+            
+            <!-- Reactions Modal -->
+            <div class="reactions-modal" id="reactions-${postId}" style="display: none;">
+              <div class="reactions-list">
+                ${['👍', '❤️', '😂', '😮', '😢', '😡']
+                  .map(
+                    (emoji) =>
+                      `<button class="reaction-btn" onclick="selectReaction(${postId}, '${emoji}')">${emoji}</button>`
+                  )
+                  .join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Comment Button -->
+          <button class="action-btn comment-btn" data-post-id="${postId}" onclick="toggleComments(${postId}); closeFullPostModal();">
+            💬 <span class="action-count">${commentCount}</span>
+          </button>
+
+          <!-- Share Button -->
+          <button class="action-btn share-btn" onclick="sharePost(${postId})">
+            📤 <span class="action-label">Share</span>
+          </button>
+        </div>
+      </footer>
+    </article>
   `;
 
   const modal = document.getElementById('fullPostModal');

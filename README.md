@@ -6,7 +6,7 @@ This project demonstrates modern JavaScript practices: authenticated API consump
 
 ## Live Project & Repository
 
-Production Deploy: [Add Netlify/Vercel URL here]
+Production Deploy: [[Add Netlify/Vercel URL here](https://socialplatformnoroffca.netlify.app/)]
 
 GitHub Repository: [https://github.com/03-renate/social_platform](https://github.com/03-renate/social_platform)
 
@@ -124,7 +124,7 @@ src/
 * Follow/unfollow users
 * Search posts
 * View own profile
-* Group extras: Comment on posts, reply to comments, react to posts ✅
+* Group extras: Comment on posts, reply to comments, react to posts
 
 ## Testing
 
